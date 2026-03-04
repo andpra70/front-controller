@@ -1,6 +1,9 @@
 services:
   front-controller:
-    image: nginx:1.27-alpine
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: docker.io/andpra70/front-controller:latest
     container_name: front-controller
     restart: unless-stopped
     depends_on:
@@ -13,9 +16,6 @@ services:
       - calendario
     ports:
       - "9090:80"
-    volumes:
-      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
-      - ./nginx/html:/usr/share/nginx/html:ro
     networks:
       - internal-services
 

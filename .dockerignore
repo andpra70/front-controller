@@ -1,0 +1,10 @@
+.git
+.gitignore
+Dockerfile
+deploy.sh
+run.sh
+localrun.sh
+publish.sh
+start.sh
+stop.sh
+stopAll.sh

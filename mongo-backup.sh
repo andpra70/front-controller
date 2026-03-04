@@ -20,6 +20,30 @@ fi
 
 mkdir -p "$EXPORT_DIR"
 
+echo "Inspecting Mongo databases before backup..."
+docker-compose exec -T mongo mongosh --quiet \
+    --username "$MONGO_ROOT_USERNAME" \
+    --password "$MONGO_ROOT_PASSWORD" \
+    --authenticationDatabase admin \
+    --eval '
+        const admin = db.getSiblingDB("admin");
+        const dbs = admin.adminCommand({ listDatabases: 1 }).databases
+          .filter(dbInfo => !["admin", "config", "local"].includes(dbInfo.name));
+        if (dbs.length === 0) {
+          print("WARNING: no application databases found.");
+        } else {
+          dbs.forEach(dbInfo => {
+            const database = db.getSiblingDB(dbInfo.name);
+            const names = database.getCollectionNames();
+            print(`DB ${dbInfo.name}`);
+            names.forEach(name => {
+              const count = database.getCollection(name).countDocuments({});
+              print(`  ${name}: ${count} docs`);
+            });
+          });
+        }
+    '
+
 docker-compose exec -T mongo mongodump \
     --username "$MONGO_ROOT_USERNAME" \
     --password "$MONGO_ROOT_PASSWORD" \
@@ -27,4 +51,4 @@ docker-compose exec -T mongo mongodump \
     --gzip \
     --archive > "$ARCHIVE_PATH"
 
-echo "Mongo backup created: $ARCHIVE_PATH"
+echo "Mongo backup created for all databases: $ARCHIVE_PATH"

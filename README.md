@@ -153,6 +153,8 @@ Per creare un backup dentro `./export-mongo/`:
 ./mongo-backup.sh
 ```
 
+Il backup include tutti i database dell'istanza Mongo.
+
 Per specificare un nome custom:
 
 ```bash
@@ -167,11 +169,29 @@ Per ripristinare l'ultimo backup disponibile:
 ./mongo-restore.sh
 ```
 
+Il restore ripristina tutti i database contenuti nell'archive selezionato.
+
 Per ripristinare un backup specifico:
 
 ```bash
 ./mongo-restore.sh export-mongo/my-backup.archive.gz
 ```
+
+### Smoke test backup/restore
+
+Per eseguire un test end-to-end:
+
+```bash
+./mongo-smoke-test.sh
+```
+
+Lo script:
+
+1. inserisce un documento di test in un database temporaneo
+2. esegue il backup completo
+3. elimina il database di test
+4. esegue il restore dell'archive generato
+5. verifica che il documento sia stato ripristinato
 
 ## Esempio da server nuovo
 

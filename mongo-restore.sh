@@ -19,7 +19,10 @@ fi
 if [[ $# -gt 0 ]]; then
     ARCHIVE_PATH="$1"
 else
-    ARCHIVE_PATH="$(ls -1t "$EXPORT_DIR"/*.archive.gz 2>/dev/null | head -n 1 || true)"
+    ARCHIVE_PATH="$(
+        find "$EXPORT_DIR" -maxdepth 1 -type f \( -name '*.archive.gz' -o -name '*.archive' \) \
+        -printf '%T@ %p\n' 2>/dev/null | sort -nr | head -n 1 | awk '{print $2}'
+    )"
 fi
 
 if [[ -z "${ARCHIVE_PATH:-}" || ! -f "$ARCHIVE_PATH" ]]; then
@@ -27,12 +30,22 @@ if [[ -z "${ARCHIVE_PATH:-}" || ! -f "$ARCHIVE_PATH" ]]; then
     exit 1
 fi
 
-cat "$ARCHIVE_PATH" | docker-compose exec -T mongo mongorestore \
-    --username "$MONGO_ROOT_USERNAME" \
-    --password "$MONGO_ROOT_PASSWORD" \
-    --authenticationDatabase admin \
-    --drop \
-    --gzip \
+RESTORE_ARGS=(
+    --username "$MONGO_ROOT_USERNAME"
+    --password "$MONGO_ROOT_PASSWORD"
+    --authenticationDatabase admin
+    --drop
     --archive
+)
 
-echo "Mongo restore completed from: $ARCHIVE_PATH"
+if [[ "$ARCHIVE_PATH" == *.gz ]]; then
+    RESTORE_ARGS+=(--gzip)
+fi
+
+echo "Archive content preview:"
+cat "$ARCHIVE_PATH" | docker-compose exec -T mongo mongorestore "${RESTORE_ARGS[@]}" --dryRun --verbose
+
+echo "Restoring all databases from archive..."
+cat "$ARCHIVE_PATH" | docker-compose exec -T mongo mongorestore "${RESTORE_ARGS[@]}"
+
+echo "Mongo restore completed for all databases from: $ARCHIVE_PATH"

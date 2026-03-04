@@ -14,6 +14,7 @@ Espone un punto di ingresso unico verso i servizi interni:
 - `catalogo-opere`
 - `crawler`
 - `calendario`
+- `mongo`
 
 ## Requisiti
 
@@ -27,9 +28,17 @@ Creare `.env` nella root del progetto:
 
 ```env
 DOMAIN=zanotti.iliadboxos.it
+MONGO_ROOT_USERNAME=root
+MONGO_ROOT_PASSWORD=rootpass
+MONGO_DATABASE=app
+MONGO_HOST_PORT=27017
+MONGO_EXPRESS_HOST_PORT=8081
+MONGO_EXPRESS_USERNAME=admin
+MONGO_EXPRESS_PASSWORD=adminpass
 ```
 
 `DOMAIN` viene usato per generare il certificato self-signed.
+Le variabili `MONGO_*` configurano il container MongoDB locale.
 
 ## Avvio locale
 
@@ -51,6 +60,13 @@ Endpoint locali:
 
 - `http://localhost:55000`
 - `https://localhost:55443`
+
+MongoDB:
+
+- container: `mongo`
+- volume dati: `./data/mongo`
+- host port: `27017` di default
+- client web: `mongo-express` su `http://localhost:8081`
 
 Nota: su HTTPS il browser mostrerà un avviso perché il certificato è self-signed.
 
@@ -98,6 +114,63 @@ Per tirare le immagini remote e rialzare lo stack:
 
 ```bash
 ./run.sh
+```
+
+## MongoDB
+
+MongoDB e disponibile come servizio locale nello stack Docker e salva i dati in:
+
+```text
+./data/mongo
+```
+
+Credenziali di default:
+
+```env
+MONGO_ROOT_USERNAME=root
+MONGO_ROOT_PASSWORD=rootpass
+MONGO_DATABASE=app
+MONGO_HOST_PORT=27017
+MONGO_EXPRESS_HOST_PORT=8081
+MONGO_EXPRESS_USERNAME=admin
+MONGO_EXPRESS_PASSWORD=adminpass
+```
+
+Puoi cambiarle in `.env`.
+
+Esempi di accesso:
+
+```text
+mongodb://root:rootpass@localhost:27017/admin
+http://localhost:8081
+```
+
+### Backup
+
+Per creare un backup dentro `./export-mongo/`:
+
+```bash
+./mongo-backup.sh
+```
+
+Per specificare un nome custom:
+
+```bash
+./mongo-backup.sh my-backup
+```
+
+### Restore
+
+Per ripristinare l'ultimo backup disponibile:
+
+```bash
+./mongo-restore.sh
+```
+
+Per ripristinare un backup specifico:
+
+```bash
+./mongo-restore.sh export-mongo/my-backup.archive.gz
 ```
 
 ## Esempio da server nuovo

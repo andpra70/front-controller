@@ -8,6 +8,12 @@ if [[ ! -f .env ]]; then
     echo "Missing .env file. Continuing with DOMAIN=localhost."
 fi
 
+if [[ -f .env ]]; then
+    set -a
+    . ./.env
+    set +a
+fi
+
 if docker-compose ps -q | grep -q .; then
     docker-compose down
 fi
@@ -24,4 +30,6 @@ docker-compose up -d --force-recreate
 echo "Project containers started."
 echo "Local HTTP:  http://localhost:55000"
 echo "Local HTTPS: https://localhost:55443"
+echo "Local Mongo:  mongodb://localhost:${MONGO_HOST_PORT:-27017}"
+echo "Mongo Express: http://localhost:${MONGO_EXPRESS_HOST_PORT:-8081}"
 echo "Public NAT required: TCP 80 -> 55000, TCP 443 -> 55443"

@@ -8,3 +8,5 @@ publish.sh
 start.sh
 stop.sh
 stopAll.sh
+data
+export-mongo

@@ -116,6 +116,22 @@ Per tirare le immagini remote e rialzare lo stack:
 ./run.sh
 ```
 
+## Aggiornare un singolo servizio
+
+Per fermare un servizio, scaricare l'immagine aggiornata e riavviarlo:
+
+```bash
+./update-service.sh <service-name>
+```
+
+Esempi:
+
+```bash
+./update-service.sh crawler
+./update-service.sh calendario
+./update-service.sh mongo-express
+```
+
 ## MongoDB
 
 MongoDB e disponibile come servizio locale nello stack Docker e salva i dati in:

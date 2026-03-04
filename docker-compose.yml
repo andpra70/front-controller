@@ -17,6 +17,7 @@ services:
     ports:
       - "9090:80"
     networks:
+      - public-edge
       - internal-services
 
   app-index:
@@ -76,6 +77,8 @@ services:
       - internal-services
 
 networks:
+  public-edge:
+    driver: bridge
   internal-services:
     driver: bridge
     internal: true

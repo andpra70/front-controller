@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Front Controller</title>
+    <style>
+        :root {
+            color-scheme: light;
+            --bg: #f3efe7;
+            --panel: rgba(255, 252, 247, 0.88);
+            --line: #d7c9b4;
+            --text: #1f2a30;
+            --muted: #5f6b73;
+            --accent: #a44a3f;
+            --accent-dark: #7f3228;
+            --ok: #1d6f42;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Georgia, "Times New Roman", serif;
+            color: var(--text);
+            background:
+                radial-gradient(circle at top left, rgba(164, 74, 63, 0.20), transparent 24rem),
+                radial-gradient(circle at bottom right, rgba(89, 124, 111, 0.18), transparent 22rem),
+                linear-gradient(180deg, #f8f3eb 0%, var(--bg) 100%);
+            min-height: 100vh;
+        }
+
+        main {
+            width: min(1100px, calc(100% - 2rem));
+            margin: 0 auto;
+            padding: 2rem 0 3rem;
+        }
+
+        .hero {
+            background: var(--panel);
+            border: 1px solid rgba(215, 201, 180, 0.8);
+            border-radius: 24px;
+            padding: 2rem;
+            box-shadow: 0 20px 60px rgba(43, 38, 34, 0.08);
+            backdrop-filter: blur(8px);
+        }
+
+        h1, h2 {
+            margin: 0;
+            font-weight: 600;
+        }
+
+        h1 {
+            font-size: clamp(2.1rem, 5vw, 4rem);
+            line-height: 0.95;
+            max-width: 12ch;
+        }
+
+        p {
+            color: var(--muted);
+            line-height: 1.6;
+        }
+
+        .hero p {
+            max-width: 60ch;
+            margin: 1rem 0 0;
+        }
+
+        .grid {
+            display: grid;
+            gap: 1rem;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            margin-top: 1.5rem;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.72);
+            border: 1px solid var(--line);
+            border-radius: 18px;
+            padding: 1.1rem;
+            min-height: 180px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .card strong {
+            font-size: 1.1rem;
+        }
+
+        .path {
+            display: inline-block;
+            margin-top: 0.7rem;
+            font-family: "Courier New", monospace;
+            font-size: 0.92rem;
+            color: var(--accent-dark);
+        }
+
+        a.button, button {
+            border: 0;
+            border-radius: 999px;
+            padding: 0.8rem 1.1rem;
+            font: inherit;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: fit-content;
+            transition: transform 140ms ease, background 140ms ease;
+        }
+
+        a.button, button.primary {
+            background: var(--accent);
+            color: #fffaf4;
+        }
+
+        a.button:hover, button.primary:hover {
+            background: var(--accent-dark);
+            transform: translateY(-1px);
+        }
+
+        .section {
+            margin-top: 1.5rem;
+            background: var(--panel);
+            border: 1px solid rgba(215, 201, 180, 0.8);
+            border-radius: 24px;
+            padding: 1.5rem;
+            box-shadow: 0 14px 40px rgba(43, 38, 34, 0.06);
+        }
+
+        .speed-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.8rem;
+            align-items: center;
+            margin: 1rem 0 1.2rem;
+        }
+
+        .speed-card {
+            min-width: 150px;
+            background: rgba(255, 255, 255, 0.74);
+            border: 1px solid var(--line);
+            border-radius: 16px;
+            padding: 0.9rem 1rem;
+        }
+
+        .speed-card span {
+            display: block;
+            font-size: 0.85rem;
+            color: var(--muted);
+            margin-bottom: 0.35rem;
+        }
+
+        .speed-card strong {
+            font-size: 1.3rem;
+        }
+
+        #status {
+            min-height: 1.5rem;
+            color: var(--ok);
+            font-weight: 600;
+        }
+
+        @media (max-width: 700px) {
+            .hero, .section {
+                padding: 1.25rem;
+                border-radius: 18px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <main>
+        <section class="hero">
+            <h1>Front controller del server applicativo</h1>
+            <p>Questa pagina espone un punto di ingresso unico per le applicazioni pubblicate dietro il reverse proxy. Ogni link apre il servizio sul relativo contesto senza esporre direttamente i container interni.</p>
+            <div class="grid">
+                <article class="card">
+                    <div>
+                        <strong>App Index</strong>
+                        <p>Applicazione indice disponibile anche come fallback principale del sistema.</p>
+                        <span class="path">/app-index/</span>
+                    </div>
+                    <a class="button" href="/app-index/">Apri</a>
+                </article>
+                <article class="card">
+                    <div>
+                        <strong>Catalogo Opere</strong>
+                        <p>Consultazione del catalogo instradata al backend interno dedicato.</p>
+                        <span class="path">/catalogo-opere/</span>
+                    </div>
+                    <a class="button" href="/catalogo-opere/">Apri</a>
+                </article>
+                <article class="card">
+                    <div>
+                        <strong>Galleria</strong>
+                        <p>Interfaccia galleria pubblicata attraverso il front controller.</p>
+                        <span class="path">/galleria/</span>
+                    </div>
+                    <a class="button" href="/galleria/">Apri</a>
+                </article>
+                <article class="card">
+                    <div>
+                        <strong>MiniCMS</strong>
+                        <p>Backoffice e contenuti serviti sul contesto applicativo dedicato.</p>
+                        <span class="path">/minicms/</span>
+                    </div>
+                    <a class="button" href="/minicms/">Apri</a>
+                </article>
+                <article class="card">
+                    <div>
+                        <strong>Watermarks</strong>
+                        <p>Servizio watermark raggiungibile solo tramite proxy interno.</p>
+                        <span class="path">/watermarks/</span>
+                    </div>
+                    <a class="button" href="/watermarks/">Apri</a>
+                </article>
+                <article class="card">
+                    <div>
+                        <strong>Crawler</strong>
+                        <p>Interfaccia crawler instradata sulla rete privata del deployment.</p>
+                        <span class="path">/crawler/</span>
+                    </div>
+                    <a class="button" href="/crawler/">Apri</a>
+                </article>
+                <article class="card">
+                    <div>
+                        <strong>Calendario</strong>
+                        <p>Modulo calendario pubblicato sul reverse proxy comune.</p>
+                        <span class="path">/calendario/</span>
+                    </div>
+                    <a class="button" href="/calendario/">Apri</a>
+                </article>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2>Speed Test</h2>
+            <p>Il test usa il browser per misurare latenza, download e upload verso questo stesso server nginx. I risultati dipendono dalla rete del client e dalle limitazioni del browser.</p>
+            <div class="speed-row">
+                <button id="run-test" class="primary" type="button">Esegui test</button>
+                <div id="status"></div>
+            </div>
+            <div class="speed-row">
+                <div class="speed-card">
+                    <span>Latenza</span>
+                    <strong id="latency">-</strong>
+                </div>
+                <div class="speed-card">
+                    <span>Download</span>
+                    <strong id="download">-</strong>
+                </div>
+                <div class="speed-card">
+                    <span>Upload</span>
+                    <strong id="upload">-</strong>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        const runButton = document.getElementById("run-test");
+        const statusNode = document.getElementById("status");
+        const latencyNode = document.getElementById("latency");
+        const downloadNode = document.getElementById("download");
+        const uploadNode = document.getElementById("upload");
+
+        function setStatus(message) {
+            statusNode.textContent = message;
+        }
+
+        function toMbps(bytes, elapsedMs) {
+            const bits = bytes * 8;
+            const seconds = elapsedMs / 1000;
+            return seconds > 0 ? (bits / seconds / 1000000).toFixed(2) + " Mbps" : "-";
+        }
+
+        async function measureLatency() {
+            const samples = [];
+            for (let index = 0; index < 5; index += 1) {
+                const start = performance.now();
+                await fetch("/__speedtest__/download?ping=" + Date.now() + "-" + index, {
+                    method: "HEAD",
+                    cache: "no-store"
+                });
+                samples.push(performance.now() - start);
+            }
+
+            const avg = samples.reduce((sum, value) => sum + value, 0) / samples.length;
+            return Math.round(avg) + " ms";
+        }
+
+        async function measureDownload() {
+            const start = performance.now();
+            const response = await fetch("/__speedtest__/download?ts=" + Date.now(), {
+                cache: "no-store"
+            });
+            const buffer = await response.arrayBuffer();
+            const elapsedMs = performance.now() - start;
+            return toMbps(buffer.byteLength, elapsedMs);
+        }
+
+        async function measureUpload() {
+            const size = 5 * 1024 * 1024;
+            const payload = new Uint8Array(size);
+            crypto.getRandomValues(payload.subarray(0, Math.min(payload.length, 65536)));
+
+            const start = performance.now();
+            await fetch("/__speedtest__/upload?ts=" + Date.now(), {
+                method: "POST",
+                cache: "no-store",
+                headers: {
+                    "Content-Type": "application/octet-stream"
+                },
+                body: payload
+            });
+            const elapsedMs = performance.now() - start;
+            return toMbps(payload.byteLength, elapsedMs);
+        }
+
+        async function runTest() {
+            runButton.disabled = true;
+            latencyNode.textContent = "-";
+            downloadNode.textContent = "-";
+            uploadNode.textContent = "-";
+
+            try {
+                setStatus("Misuro la latenza...");
+                latencyNode.textContent = await measureLatency();
+
+                setStatus("Misuro la velocita di download...");
+                downloadNode.textContent = await measureDownload();
+
+                setStatus("Misuro la velocita di upload...");
+                uploadNode.textContent = await measureUpload();
+
+                setStatus("Test completato.");
+            } catch (error) {
+                console.error(error);
+                setStatus("Test non riuscito. Verificare che nginx sia raggiungibile.");
+            } finally {
+                runButton.disabled = false;
+            }
+        }
+
+        runButton.addEventListener("click", runTest);
+    </script>
+</body>
+</html>

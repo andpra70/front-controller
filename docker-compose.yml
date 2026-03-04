@@ -1,0 +1,81 @@
+services:
+  front-controller:
+    image: nginx:1.27-alpine
+    container_name: front-controller
+    restart: unless-stopped
+    depends_on:
+      - app-index
+      - galleria
+      - minicms
+      - watermarks
+      - catalogo-opere
+      - crawler
+      - calendario
+    ports:
+      - "9090:80"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./nginx/html:/usr/share/nginx/html:ro
+    networks:
+      - internal-services
+
+  app-index:
+    image: docker.io/andpra70/app-index:latest
+    container_name: app-index
+    pull_policy: always
+    restart: unless-stopped
+    networks:
+      - internal-services
+
+  galleria:
+    image: docker.io/andpra70/galleria-virtuale:latest
+    container_name: galleria-virtuale
+    pull_policy: always
+    restart: unless-stopped
+    networks:
+      - internal-services
+
+  minicms:
+    image: docker.io/andpra70/minicms:latest
+    container_name: minicms
+    pull_policy: always
+    restart: unless-stopped
+    networks:
+      - internal-services
+
+  watermarks:
+    image: docker.io/andpra70/watermarks:latest
+    container_name: watermark
+    pull_policy: always
+    restart: unless-stopped
+    networks:
+      - internal-services
+
+  catalogo-opere:
+    image: docker.io/andpra70/catalogo-opere:latest
+    container_name: catalogo-opere
+    pull_policy: always
+    restart: unless-stopped
+    networks:
+      - internal-services
+
+  crawler:
+    image: docker.io/andpra70/crawler:latest
+    container_name: crawler
+    pull_policy: always
+    restart: unless-stopped
+    networks:
+      - internal-services
+
+  calendario:
+    image: docker.io/andpra70/calendario:latest
+    container_name: calendario
+    pull_policy: always
+    restart: unless-stopped
+    networks:
+      - internal-services
+
+networks:
+  internal-services:
+    driver: bridge
+    internal: true

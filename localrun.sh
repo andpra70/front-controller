@@ -8,10 +8,10 @@ if [[ ! -f .env ]]; then
     echo "Missing .env file. Continuing with DOMAIN=localhost."
 fi
 
-if docker compose ps -q | grep -q .; then
-    docker compose down
+if docker-compose ps -q | grep -q .; then
+    docker-compose down
 fi
 
 ./scripts.sh
 
-docker compose up --build
+docker-compose up --build

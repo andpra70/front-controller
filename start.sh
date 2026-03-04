@@ -8,8 +8,8 @@ if [[ ! -f .env ]]; then
     echo "Missing .env file. Continuing with DOMAIN=localhost."
 fi
 
-if docker compose ps -q | grep -q .; then
-    docker compose down
+if docker-compose ps -q | grep -q .; then
+    docker-compose down
 fi
 
 ./scripts.sh
@@ -19,8 +19,8 @@ if [[ ! -f certs/live/fullchain.pem || ! -f certs/live/privkey.pem ]]; then
     exit 1
 fi
 
-docker compose build --no-cache front-controller
-docker compose up -d --force-recreate
+docker-compose build --no-cache front-controller
+docker-compose up -d --force-recreate
 echo "Project containers started."
 echo "Local HTTP:  http://localhost:55000"
 echo "Local HTTPS: https://localhost:55443"

@@ -18,7 +18,7 @@ Espone un punto di ingresso unico verso i servizi interni:
 ## Requisiti
 
 - Docker
-- Docker Compose plugin (`docker compose`)
+- Docker Compose (`docker-compose`)
 - `openssl`
 
 ## Configurazione
@@ -45,7 +45,7 @@ Lo script fa queste operazioni:
 2. genera i certificati self-signed in `certs/live`
 3. verifica la presenza di `fullchain.pem` e `privkey.pem`
 4. builda senza cache il solo `front-controller`
-5. avvia tutto lo stack con `docker compose`
+5. avvia tutto lo stack con `docker-compose`
 
 Endpoint locali:
 
@@ -143,7 +143,7 @@ chmod +x *.sh
 ### 5. Verificare
 
 ```bash
-docker compose ps
+docker-compose ps
 curl -I http://127.0.0.1:55000
 curl -Ik https://127.0.0.1:55443
 ```
@@ -185,13 +185,13 @@ La homepage include uno speed test browser-side che usa:
 Se il browser mostra errori strani dopo una modifica di configurazione:
 
 ```bash
-docker compose down
+docker-compose down
 ./start.sh
 ```
 
 Se `crawler` non riesce a raggiungere Internet, verificare che sia connesso anche alla rete `public-edge`:
 
 ```bash
-docker compose ps
-docker compose exec crawler getent hosts www.pinterest.com
+docker-compose ps
+docker-compose exec crawler getent hosts www.pinterest.com
 ```

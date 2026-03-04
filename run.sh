@@ -22,8 +22,8 @@ if [[ -f .env ]]; then
     DOMAIN="${DOMAIN:-localhost}"
 fi
 
-if docker compose -p "$STACK_NAME" ps -q | grep -q .; then
-    docker compose -p "$STACK_NAME" down
+if docker-compose -p "$STACK_NAME" ps -q | grep -q .; then
+    docker-compose -p "$STACK_NAME" down
 fi
 
 ./scripts.sh
@@ -33,9 +33,9 @@ if [[ ! -f certs/live/fullchain.pem || ! -f certs/live/privkey.pem ]]; then
     exit 1
 fi
 
-docker compose -p "$STACK_NAME" pull app-index galleria minicms watermarks catalogo-opere crawler calendario || true
-docker compose -p "$STACK_NAME" build --no-cache front-controller
-docker compose -p "$STACK_NAME" up -d --force-recreate
+docker-compose -p "$STACK_NAME" pull app-index galleria minicms watermarks catalogo-opere crawler calendario || true
+docker-compose -p "$STACK_NAME" build --no-cache front-controller
+docker-compose -p "$STACK_NAME" up -d --force-recreate
 
 echo "Stack started"
 echo "Front controller image: $FULL_IMAGE"

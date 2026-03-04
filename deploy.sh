@@ -9,6 +9,12 @@ IMAGE_NAME="${IMAGE_NAME:-front-controller}"
 TAG="${TAG:-latest}"
 FULL_IMAGE="${REGISTRY}/${IMAGE_NAME}:${TAG}"
 
+if [[ ! -f .env ]]; then
+    echo "Missing .env file. Continuing with DOMAIN=localhost."
+fi
+
+./scripts.sh
+
 docker build -t "$FULL_IMAGE" .
 docker push "$FULL_IMAGE"
 

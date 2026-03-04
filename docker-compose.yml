@@ -15,7 +15,8 @@ services:
       - crawler
       - calendario
     ports:
-      - "9090:80"
+      - "55000:55000"
+      - "55443:55443"
     networks:
       - public-edge
       - internal-services
@@ -65,7 +66,13 @@ services:
     container_name: crawler
     pull_policy: always
     restart: unless-stopped
+    volumes:
+      - ./data:/app/data
+    dns:
+      - 1.1.1.1
+      - 8.8.8.8
     networks:
+      - public-edge
       - internal-services
 
   calendario:

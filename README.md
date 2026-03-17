@@ -67,8 +67,51 @@ MongoDB:
 - volume dati: `./data/mongo`
 - host port: `27017` di default
 - client web: `mongo-express` su `http://localhost:8081`
+- Prometheus: `http://localhost:9090`
+- Grafana: `http://localhost:3000`
 
 Nota: su HTTPS il browser mostrerà un avviso perché il certificato è self-signed.
+
+## Monitoraggio
+
+Lo stack include ora:
+
+- `nginx-prometheus-exporter` per le metriche native di `nginx`
+- `blackbox-exporter` per sonde HTTP via `nginx`
+- `prometheus` per scraping e storage metriche
+- `grafana` con dashboard provisionata automaticamente
+
+Porte locali di default:
+
+- Grafana: `http://localhost:3000`
+- Prometheus: `http://localhost:9090`
+
+Credenziali Grafana di default:
+
+```env
+GRAFANA_ADMIN_USER=admin
+GRAFANA_ADMIN_PASSWORD=admin
+PROMETHEUS_HOST_PORT=9090
+GRAFANA_HOST_PORT=3000
+```
+
+Sonde `nginx` disponibili:
+
+- `https://localhost:55443/__monitoring__/ok` restituisce `200`
+- `https://localhost:55443/__monitoring__/ko` restituisce `503`
+- `https://localhost:55443/__monitoring__/dos` restituisce `429`
+- `https://localhost:55443/__monitoring__/rate-limit` usa `limit_req` e restituisce `429` in caso di burst
+
+Metriche `nginx` esposte internamente:
+
+- `http://front-controller:55000/__monitoring__/nginx_status`
+
+La dashboard Grafana mostra:
+
+- richieste e connessioni `nginx`
+- stato reachability degli applicativi dietro il reverse proxy
+- sonde dedicate `OK`, `KO` e `DOS`
+- latenza delle chiamate verso gli applicativi passando da `nginx`
 
 ## Avvio in foreground
 

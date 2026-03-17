@@ -18,9 +18,19 @@ services:
     ports:
       - "55000:55000"
       - "55443:55443"
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - wget --no-check-certificate --quiet --spider https://127.0.0.1:55443/__monitoring__/ok || exit 1
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
     networks:
       - public-edge
       - internal-services
+    volumes:
+      - ./data/logs/nginx:/var/log/nginx
 
   app-index:
     image: docker.io/andpra70/app-index:latest
@@ -141,9 +151,115 @@ services:
     networks:
       - internal-services
 
+  nginx-exporter:
+    image: nginx/nginx-prometheus-exporter:1.4.1
+    container_name: nginx-exporter
+    restart: unless-stopped
+    command:
+      - --nginx.scrape-uri=http://front-controller:55000/__monitoring__/nginx_status
+    depends_on:
+      front-controller:
+        condition: service_healthy
+    networks:
+      - internal-services
+
+  blackbox-exporter:
+    image: prom/blackbox-exporter:v0.27.0
+    container_name: blackbox-exporter
+    restart: unless-stopped
+    command:
+      - --config.file=/etc/blackbox_exporter/blackbox.yml
+    volumes:
+      - ./blackbox/blackbox.yml:/etc/blackbox_exporter/blackbox.yml:ro
+    depends_on:
+      front-controller:
+        condition: service_healthy
+    networks:
+      - internal-services
+
+  nginxlog-exporter:
+    image: ghcr.io/martin-helmich/prometheus-nginxlog-exporter/exporter:v1
+    container_name: nginxlog-exporter
+    restart: unless-stopped
+    command:
+      - -config-file
+      - /etc/prometheus-nginxlog-exporter/config.yml
+    volumes:
+      - ./nginxlog-exporter/config.yml:/etc/prometheus-nginxlog-exporter/config.yml:ro
+      - ./data/logs/nginx:/var/log/nginx:ro
+    depends_on:
+      front-controller:
+        condition: service_healthy
+    networks:
+      - internal-services
+
+  nginx-logrotate:
+    build:
+      context: .
+      dockerfile: docker/logrotate-nginx/Dockerfile
+    image: front-controller-nginx-logrotate:latest
+    container_name: nginx-logrotate
+    restart: unless-stopped
+    volumes:
+      - ./data/logs/nginx:/var/log/nginx
+      - ./logrotate/nginx:/etc/logrotate.d:ro
+      - ./data/logs/nginx/logrotate-state:/var/lib/logrotate
+    depends_on:
+      - front-controller
+    networks:
+      - internal-services
+
+  prometheus:
+    image: prom/prometheus:v3.3.0
+    container_name: prometheus
+    restart: unless-stopped
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --web.enable-lifecycle
+      - --web.external-url=https://${DOMAIN:-localhost}:55443/prometheus/
+      - --web.route-prefix=/prometheus
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    depends_on:
+      - nginx-exporter
+      - blackbox-exporter
+      - nginxlog-exporter
+    ports:
+      - "${PROMETHEUS_HOST_PORT:-9090}:9090"
+    networks:
+      - internal-services
+
+  grafana:
+    image: grafana/grafana:11.6.0
+    container_name: grafana
+    restart: unless-stopped
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_SERVER_ROOT_URL: https://${DOMAIN:-localhost}:55443/grafana/
+      GF_SERVER_SERVE_FROM_SUB_PATH: "true"
+    volumes:
+      - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
+      - ./grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana-data:/var/lib/grafana
+    depends_on:
+      - prometheus
+    ports:
+      - "${GRAFANA_HOST_PORT:-3000}:3000"
+    networks:
+      - internal-services
+
 networks:
   public-edge:
     driver: bridge
   internal-services:
     driver: bridge
     internal: true
+
+volumes:
+  prometheus-data:
+  grafana-data:

@@ -1,0 +1,100 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: prometheus
+    static_configs:
+      - targets: ['prometheus:9090']
+
+  - job_name: nginx
+    static_configs:
+      - targets: ['nginx-exporter:9113']
+
+  - job_name: blackbox-exporter
+    static_configs:
+      - targets: ['blackbox-exporter:9115']
+
+  - job_name: nginxlog
+    static_configs:
+      - targets: ['nginxlog-exporter:4040']
+
+  - job_name: nginx-apps
+    metrics_path: /probe
+    params:
+      module: [http_site_reachable_insecure]
+    static_configs:
+      - targets:
+          - https://front-controller:55443/app-index/
+          - https://front-controller:55443/galleria/
+          - https://front-controller:55443/minicms/
+          - https://front-controller:55443/watermarks/
+          - https://front-controller:55443/catalogo-opere/
+          - https://front-controller:55443/crawler/
+          - https://front-controller:55443/calendario/
+          - https://front-controller:55443/mongo-express/
+          - https://front-controller:55443/plotterfun-node-editor/
+          - https://front-controller:55443/prometheus/
+          - https://front-controller:55443/grafana/
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        regex: https://front-controller:55443/([^/]+)/?
+        replacement: $1
+        target_label: site
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: blackbox-exporter:9115
+
+  - job_name: nginx-probe-ok
+    metrics_path: /probe
+    params:
+      module: [http_2xx_insecure]
+    static_configs:
+      - targets:
+          - https://front-controller:55443/__monitoring__/ok
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - target_label: probe
+        replacement: ok
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: blackbox-exporter:9115
+
+  - job_name: nginx-probe-ko
+    metrics_path: /probe
+    params:
+      module: [http_503_insecure]
+    static_configs:
+      - targets:
+          - https://front-controller:55443/__monitoring__/ko
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - target_label: probe
+        replacement: ko
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: blackbox-exporter:9115
+
+  - job_name: nginx-probe-dos
+    metrics_path: /probe
+    params:
+      module: [http_429_insecure]
+    static_configs:
+      - targets:
+          - https://front-controller:55443/__monitoring__/dos
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - target_label: probe
+        replacement: dos
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: blackbox-exporter:9115

@@ -1,0 +1,40 @@
+modules:
+  http_site_reachable_insecure:
+    prober: http
+    timeout: 5s
+    http:
+      valid_status_codes: [200, 204, 301, 302, 307, 308, 401, 403]
+      method: GET
+      preferred_ip_protocol: ip4
+      tls_config:
+        insecure_skip_verify: true
+
+  http_2xx_insecure:
+    prober: http
+    timeout: 5s
+    http:
+      valid_status_codes: [200, 204, 301, 302, 307, 308]
+      method: GET
+      preferred_ip_protocol: ip4
+      tls_config:
+        insecure_skip_verify: true
+
+  http_503_insecure:
+    prober: http
+    timeout: 5s
+    http:
+      valid_status_codes: [503]
+      method: GET
+      preferred_ip_protocol: ip4
+      tls_config:
+        insecure_skip_verify: true
+
+  http_429_insecure:
+    prober: http
+    timeout: 5s
+    http:
+      valid_status_codes: [429]
+      method: GET
+      preferred_ip_protocol: ip4
+      tls_config:
+        insecure_skip_verify: true

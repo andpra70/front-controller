@@ -1,10 +1,12 @@
 #!/usr/bin/env node
 'use strict';
 
-const fs = require('node:fs');
-const path = require('node:path');
-const readline = require('node:readline');
-const { execFile, spawn } = require('node:child_process');
+const fs = require('fs');
+const path = require('path');
+const readline = require('readline');
+const childProcess = require('child_process');
+const execFile = childProcess.execFile;
+const spawn = childProcess.spawn;
 
 const ROOT_DIR = path.resolve(__dirname, '..');
 const UPDATE_SCRIPT = path.join(ROOT_DIR, 'update-service.sh');
@@ -51,7 +53,7 @@ function color(text, value) {
 }
 
 function truncate(text, width) {
-  const value = String(text ?? '');
+  const value = String(text == null ? '' : text);
   if (value.length <= width) return value.padEnd(width, ' ');
   if (width <= 1) return value.slice(0, width);
   return `${value.slice(0, width - 1)}…`;
@@ -226,8 +228,8 @@ async function refreshServices() {
       const row = statuses.get(serviceName);
       return {
         serviceName,
-        containerName: row?.name || '-',
-        status: row?.status || 'Not created',
+        containerName: row && row.name ? row.name : '-',
+        status: row && row.status ? row.status : 'Not created',
       };
     });
     state.selectedIndex = Math.max(0, Math.min(state.selectedIndex, Math.max(state.services.length - 1, 0)));
@@ -286,7 +288,7 @@ function runUpdateForSelectedService() {
   });
   child.on('close', async (code) => {
     state.updateInProgress = false;
-    state.updateExitCode = code ?? 1;
+    state.updateExitCode = code == null ? 1 : code;
     await refreshServices();
   });
 }

@@ -152,6 +152,53 @@ function parseTopOutput(output) {
   };
 }
 
+function formatBytes(bytes) {
+  const value = Number(bytes);
+  if (!isFinite(value) || value < 0) return 'n/a';
+
+  const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+  let size = value;
+  let unitIndex = 0;
+
+  while (size >= 1024 && unitIndex < units.length - 1) {
+    size /= 1024;
+    unitIndex += 1;
+  }
+
+  const precision = size >= 10 || unitIndex === 0 ? 0 : 1;
+  return `${size.toFixed(precision)} ${units[unitIndex]}`;
+}
+
+async function getMemoryUsage(containerId) {
+  try {
+    const result = await shellExec('docker', ['stats', '--no-stream', '--format', '{{.MemUsage}}', containerId]);
+    const line = result.stdout.trim();
+    return line || 'n/a';
+  } catch (_error) {
+    return 'n/a';
+  }
+}
+
+async function getDiskUsage(containerId) {
+  try {
+    const result = await shellExec('docker', ['inspect', '--size', containerId]);
+    const rows = JSON.parse(result.stdout);
+    const row = rows && rows[0] ? rows[0] : null;
+    if (!row) return 'n/a';
+
+    const sizeRw = formatBytes(row.SizeRw);
+    const sizeRootFs = formatBytes(row.SizeRootFs);
+
+    if (sizeRw === 'n/a' && sizeRootFs === 'n/a') {
+      return 'n/a';
+    }
+
+    return `rw ${sizeRw} | fs ${sizeRootFs}`;
+  } catch (_error) {
+    return 'n/a';
+  }
+}
+
 async function getComposeStatus(serviceName) {
   try {
     const containerId = await getContainerId(serviceName);
@@ -189,6 +236,11 @@ async function getComposeStatus(serviceName) {
       logLines = [];
     }
 
+    const runtimeData = await Promise.all([
+      getMemoryUsage(containerId),
+      getDiskUsage(containerId),
+    ]);
+
     return {
       serviceName,
       containerName: inspectData && inspectData.Name ? inspectData.Name.replace(/^\/+/, '') : containerId.slice(0, 12),
@@ -197,6 +249,8 @@ async function getComposeStatus(serviceName) {
       topSummary: topData.topSummary,
       topLines: topData.topLines,
       logLines: logLines,
+      memoryUsage: runtimeData[0],
+      diskUsage: runtimeData[1],
     };
   } catch (error) {
     const stderr = (error.stderr || '').trim();
@@ -303,6 +357,7 @@ function renderFooter() {
     lines.push('');
     lines.push(color('Container top', `${ANSI.bold}${ANSI.blue}`));
     lines.push(color(`Container: ${selected.containerName || '-'}    Status: ${selected.status || '-'}`, ANSI.gray));
+    lines.push(color(`RAM: ${selected.memoryUsage || 'n/a'}    Disk: ${selected.diskUsage || 'n/a'}`, ANSI.gray));
     if (selected.topLines && selected.topLines.length > 0) {
       for (const line of selected.topLines) {
         lines.push(truncate(line, process.stdout.columns || 120));
@@ -478,6 +533,7 @@ function runUpdateForSelectedService() {
     state.updateInProgress = false;
     state.updateExitCode = code == null ? 1 : code;
     await refreshServices();
+    state.updateLog = [];
     syncLogFollower();
   });
 }

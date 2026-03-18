@@ -196,6 +196,8 @@ Per monitorare lo stato dei servizi del compose da terminale e lanciare l'update
 ./run-compose-monitor.sh
 ```
 
+Il riquadro del servizio selezionato mostra stato runtime, processi `top`, RAM, uso disco del container e live tail log.
+
 Comandi disponibili nella TUI:
 
 - `Freccia su/giu` oppure `j/k` per cambiare selezione

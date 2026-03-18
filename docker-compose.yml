@@ -14,6 +14,7 @@ services:
       - catalogo-opere
       - crawler
       - calendario
+      - trumpet
       - plotterfun-node-editor
     ports:
       - "55000:55000"
@@ -139,6 +140,14 @@ services:
   calendario:
     image: docker.io/andpra70/calendario:latest
     container_name: calendario
+    pull_policy: always
+    restart: unless-stopped
+    networks:
+      - internal-services
+
+  trumpet:
+    image: docker.io/andpra70/trumpet:latest
+    container_name: front-controller-trumpet
     pull_policy: always
     restart: unless-stopped
     networks:

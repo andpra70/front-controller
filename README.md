@@ -110,7 +110,7 @@ Metriche `nginx` esposte internamente:
 La dashboard Grafana mostra:
 
 - richieste e connessioni `nginx`
-- stato reachability degli applicativi dietro il reverse proxy
+- stato reachability di tutti gli applicativi pubblicati dietro il reverse proxy
 - sonde dedicate `OK`, `KO` e `DOS`
 - latenza delle chiamate verso gli applicativi passando da `nginx`
 

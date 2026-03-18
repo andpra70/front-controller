@@ -32,6 +32,9 @@ scrape_configs:
           - https://front-controller:55443/catalogo-opere/
           - https://front-controller:55443/crawler/
           - https://front-controller:55443/calendario/
+          - https://front-controller:55443/trumpet/
+          - https://front-controller:55443/tuner/
+          - https://front-controller:55443/fileserver/
           - https://front-controller:55443/mongo-express/
           - https://front-controller:55443/plotterfun-node-editor/
           - https://front-controller:55443/prometheus/

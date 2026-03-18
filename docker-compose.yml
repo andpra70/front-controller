@@ -176,7 +176,7 @@ services:
       CORS_ORIGIN: https://${DOMAIN:-localhost}:55443
       MAX_EDITABLE_BYTES: 1048576
     volumes:
-      - ../app/fileserver/data/files:/data
+      - ./data/files:/data
     networks:
       - internal-services
 

@@ -16,6 +16,7 @@ services:
       - calendario
       - trumpet
       - tuner
+      - fileserver
       - plotterfun-node-editor
     ports:
       - "55000:55000"
@@ -159,6 +160,23 @@ services:
     container_name: front-controller-tuner
     pull_policy: always
     restart: unless-stopped
+    networks:
+      - internal-services
+
+  fileserver:
+    image: docker.io/andpra70/fileserver:latest
+    container_name: front-controller-fileserver
+    pull_policy: always
+    restart: unless-stopped
+    environment:
+      PORT: 8080
+      APP_BASE: /
+      CLIENT_DIST: /app/client-dist
+      VOLUME_ROOT: /data
+      CORS_ORIGIN: https://${DOMAIN:-localhost}:55443
+      MAX_EDITABLE_BYTES: 1048576
+    volumes:
+      - ../app/fileserver/data/files:/data
     networks:
       - internal-services
 

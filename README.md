@@ -16,6 +16,7 @@ Espone un punto di ingresso unico verso i servizi interni:
 - `calendario`
 - `trumpet`
 - `tuner`
+- `fileserver`
 - `plotterfun-node-editor`
 - `mongo`
 
@@ -174,6 +175,7 @@ Esempi:
 ./update-service.sh calendario
 ./update-service.sh mongo-express
 ./update-service.sh tuner
+./update-service.sh fileserver
 ```
 
 ## Aggiornare tutto lo stack
@@ -337,7 +339,12 @@ Il front controller pubblica questi path:
 - `/calendario/`
 - `/trumpet/`
 - `/tuner/`
+- `/fileserver/`
 - `/plotterfun-node-editor/`
+
+API `fileserver` pubblicate anche su:
+
+- `/fileserver/api/`
 
 ## Speed test
 

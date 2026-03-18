@@ -200,6 +200,7 @@ Comandi disponibili nella TUI:
 
 - `Freccia su/giu` oppure `j/k` per cambiare selezione
 - `Invio` oppure `u` per eseguire `./update-service.sh <service>`
+- `l` per attivare o disattivare il live tail delle ultime 5 righe di log del servizio selezionato
 - `r` per refresh manuale
 - `q` per uscire
 

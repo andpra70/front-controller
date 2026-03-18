@@ -45,6 +45,9 @@ const state = {
   updateService: null,
   updateLog: [],
   updateExitCode: null,
+  showLogs: false,
+  logFollower: null,
+  logServiceName: null,
   quitting: false,
 };
 
@@ -163,6 +166,7 @@ async function getComposeStatus(serviceName) {
       topSummary: '0 proc',
       topLines: [],
     };
+    let logLines = [];
 
     try {
       const topResult = await shellExec('docker', ['top', containerId]);
@@ -174,6 +178,17 @@ async function getComposeStatus(serviceName) {
       };
     }
 
+    try {
+      const logsResult = await shellExec('docker', ['logs', '--tail', '5', containerId]);
+      logLines = logsResult.stdout
+        .replace(/\r/g, '')
+        .split('\n')
+        .filter(Boolean)
+        .slice(-5);
+    } catch (_error) {
+      logLines = [];
+    }
+
     return {
       serviceName,
       containerName: inspectData && inspectData.Name ? inspectData.Name.replace(/^\/+/, '') : containerId.slice(0, 12),
@@ -181,6 +196,7 @@ async function getComposeStatus(serviceName) {
       status: summarizeStatus(inspectData),
       topSummary: topData.topSummary,
       topLines: topData.topLines,
+      logLines: logLines,
     };
   } catch (error) {
     const stderr = (error.stderr || '').trim();
@@ -206,7 +222,7 @@ function statusTone(status) {
 function renderHeader(width) {
   const title = color(' Compose Control Deck ', `${ANSI.bold}${ANSI.bgMagenta}${ANSI.white}`);
   const subtitle = color('monitor | refresh | single-service update', `${ANSI.cyan}${ANSI.bold}`);
-  return `${title}\n${subtitle}\n${color('Arrows/J-K navigate  Enter/U update  R refresh  Q quit', ANSI.gray)}\n${'='.repeat(Math.max(48, Math.min(width, 100)))}`;
+  return `${title}\n${subtitle}\n${color('Arrows/J-K navigate  Enter/U update  L logs  R refresh  Q quit', ANSI.gray)}\n${'='.repeat(Math.max(48, Math.min(width, 100)))}`;
 }
 
 function renderTable(width) {
@@ -294,6 +310,18 @@ function renderFooter() {
     } else {
       lines.push(color('No process data available for this service.', ANSI.gray));
     }
+
+    if (state.showLogs) {
+      lines.push('');
+      lines.push(color('Last 5 log lines', `${ANSI.bold}${ANSI.blue}`));
+      if (selected.logLines && selected.logLines.length > 0) {
+        for (const line of selected.logLines) {
+          lines.push(truncate(line, process.stdout.columns || 120));
+        }
+      } else {
+        lines.push(color('No log data available for this service.', ANSI.gray));
+      }
+    }
   }
 
   return lines.join('\n');
@@ -311,6 +339,73 @@ function render() {
     renderFooter(),
   ].join('\n');
   process.stdout.write(output);
+}
+
+function getSelectedService() {
+  return state.services[state.selectedIndex] || null;
+}
+
+function stopLogFollower() {
+  if (!state.logFollower) return;
+
+  try {
+    state.logFollower.removeAllListeners();
+    state.logFollower.kill('SIGTERM');
+  } catch (_error) {
+    // ignore cleanup errors
+  }
+
+  state.logFollower = null;
+  state.logServiceName = null;
+}
+
+function appendServiceLog(chunk) {
+  const selected = getSelectedService();
+  if (!selected) return;
+
+  const lines = String(chunk || '')
+    .replace(/\r/g, '')
+    .split('\n')
+    .filter(Boolean);
+
+  if (lines.length === 0) return;
+
+  selected.logLines = (selected.logLines || []).concat(lines).slice(-5);
+  render();
+}
+
+function syncLogFollower() {
+  const selected = getSelectedService();
+
+  if (!state.showLogs || !selected || !selected.containerId) {
+    stopLogFollower();
+    return;
+  }
+
+  if (state.logFollower && state.logServiceName === selected.serviceName) {
+    return;
+  }
+
+  stopLogFollower();
+  selected.logLines = (selected.logLines || []).slice(-5);
+
+  const child = spawn('docker', ['logs', '-f', '--tail', '5', selected.containerId], {
+    cwd: ROOT_DIR,
+    stdio: ['ignore', 'pipe', 'pipe'],
+  });
+
+  state.logFollower = child;
+  state.logServiceName = selected.serviceName;
+
+  child.stdout.on('data', appendServiceLog);
+  child.stderr.on('data', appendServiceLog);
+  child.on('close', function () {
+    if (state.logFollower === child) {
+      state.logFollower = null;
+      state.logServiceName = null;
+      render();
+    }
+  });
 }
 
 async function refreshServices() {
@@ -341,6 +436,7 @@ async function refreshServices() {
     }
   } finally {
     state.loading = false;
+    syncLogFollower();
     render();
   }
 }
@@ -358,9 +454,10 @@ function appendUpdateLog(chunk) {
 function runUpdateForSelectedService() {
   if (state.updateInProgress || state.services.length === 0) return;
 
-  const selected = state.services[state.selectedIndex];
+  const selected = getSelectedService();
   if (!selected) return;
 
+  stopLogFollower();
   state.updateInProgress = true;
   state.updateService = selected.serviceName;
   state.updateExitCode = null;
@@ -381,18 +478,21 @@ function runUpdateForSelectedService() {
     state.updateInProgress = false;
     state.updateExitCode = code == null ? 1 : code;
     await refreshServices();
+    syncLogFollower();
   });
 }
 
 function moveSelection(delta) {
   if (state.services.length === 0) return;
   state.selectedIndex = (state.selectedIndex + delta + state.services.length) % state.services.length;
+  syncLogFollower();
   render();
 }
 
 function cleanupAndExit(code = 0) {
   if (state.quitting) return;
   state.quitting = true;
+  stopLogFollower();
   process.stdout.write(`${ANSI.showCursor}${ANSI.reset}\n`);
   process.exit(code);
 }
@@ -433,6 +533,12 @@ async function main() {
     }
     if (key.name === 'r') {
       await refreshServices();
+      return;
+    }
+    if (key.name === 'l') {
+      state.showLogs = !state.showLogs;
+      syncLogFollower();
+      render();
     }
   });
 

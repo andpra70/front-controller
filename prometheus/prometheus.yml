@@ -25,7 +25,6 @@ scrape_configs:
       module: [http_site_reachable_insecure]
     static_configs:
       - targets:
-          - https://front-controller:55443/app-index/
           - https://front-controller:55443/galleria/
           - https://front-controller:55443/minicms/
           - https://front-controller:55443/watermarks/

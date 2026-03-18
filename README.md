@@ -7,7 +7,6 @@ Front controller Docker-based con `nginx` in HTTPS self-signed su:
 
 Espone un punto di ingresso unico verso i servizi interni:
 
-- `app-index`
 - `galleria`
 - `minicms`
 - `watermarks`
@@ -348,7 +347,6 @@ Se invece vuoi usare direttamente le porte alte anche dall'esterno:
 Il front controller pubblica questi path:
 
 - `/` homepage statica
-- `/app-index/`
 - `/catalogo-opere/`
 - `/galleria/`
 - `/minicms/`

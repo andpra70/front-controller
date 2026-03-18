@@ -7,7 +7,6 @@ services:
     container_name: front-controller
     restart: unless-stopped
     depends_on:
-      - app-index
       - galleria
       - minicms
       - watermarks
@@ -34,14 +33,6 @@ services:
       - internal-services
     volumes:
       - ./data/logs/nginx:/var/log/nginx
-
-  app-index:
-    image: docker.io/andpra70/app-index:latest
-    container_name: app-index
-    pull_policy: always
-    restart: unless-stopped
-    networks:
-      - internal-services
 
   galleria:
     image: docker.io/andpra70/galleria-virtuale:latest

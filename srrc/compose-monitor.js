@@ -81,26 +81,37 @@ async function getComposeServices() {
     .filter(Boolean);
 }
 
-function parseComposePsTable(output) {
-  const lines = output.split('\n').map((line) => line.trimEnd()).filter(Boolean);
-  if (lines.length <= 1) return new Map();
-
-  const rows = new Map();
-  for (const line of lines.slice(1)) {
-    const cols = line.split(/\s{2,}/).map((part) => part.trim());
-    if (cols.length < 4) continue;
-
-    const [name, image, command, service, ...rest] = cols;
-    const status = rest[1] || rest[0] || 'Unknown';
-    rows.set(service, { name, image, command, service, status });
+function parseSingleServicePs(output, serviceName) {
+  const lines = output.split('\n').map((line) => line.trimRight()).filter(Boolean);
+  if (lines.length <= 1) {
+    return {
+      serviceName,
+      containerName: '-',
+      status: 'Not created',
+    };
   }
-  return rows;
+
+  const line = lines[1];
+  const cols = line.split(/\s{2,}/).map((part) => part.trim());
+  if (cols.length < 3) {
+    return {
+      serviceName,
+      containerName: '-',
+      status: 'Unknown',
+    };
+  }
+
+  return {
+    serviceName,
+    containerName: cols[0] || '-',
+    status: cols[2] || 'Unknown',
+  };
 }
 
-async function getComposeStatuses() {
+async function getComposeStatus(serviceName) {
   try {
-    const { stdout } = await shellExec('docker', ['compose', 'ps', '--all']);
-    return parseComposePsTable(stdout);
+    const { stdout } = await shellExec('docker-compose', ['ps', serviceName]);
+    return parseSingleServicePs(stdout, serviceName);
   } catch (error) {
     const stderr = (error.stderr || '').trim();
     if (stderr) throw new Error(stderr);
@@ -223,15 +234,9 @@ async function refreshServices() {
   render();
 
   try {
-    const [serviceNames, statuses] = await Promise.all([getComposeServices(), getComposeStatuses()]);
-    state.services = serviceNames.map((serviceName) => {
-      const row = statuses.get(serviceName);
-      return {
-        serviceName,
-        containerName: row && row.name ? row.name : '-',
-        status: row && row.status ? row.status : 'Not created',
-      };
-    });
+    const serviceNames = await getComposeServices();
+    const statuses = await Promise.all(serviceNames.map(getComposeStatus));
+    state.services = statuses;
     state.selectedIndex = Math.max(0, Math.min(state.selectedIndex, Math.max(state.services.length - 1, 0)));
     state.lastRefreshAt = new Date();
   } catch (error) {

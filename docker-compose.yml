@@ -15,6 +15,7 @@ services:
       - crawler
       - calendario
       - trumpet
+      - tuner
       - plotterfun-node-editor
     ports:
       - "55000:55000"
@@ -148,6 +149,14 @@ services:
   trumpet:
     image: docker.io/andpra70/trumpet:latest
     container_name: front-controller-trumpet
+    pull_policy: always
+    restart: unless-stopped
+    networks:
+      - internal-services
+
+  tuner:
+    image: docker.io/andpra70/tuner:latest
+    container_name: front-controller-tuner
     pull_policy: always
     restart: unless-stopped
     networks:

@@ -14,6 +14,9 @@ Espone un punto di ingresso unico verso i servizi interni:
 - `catalogo-opere`
 - `crawler`
 - `calendario`
+- `trumpet`
+- `tuner`
+- `plotterfun-node-editor`
 - `mongo`
 
 ## Requisiti
@@ -67,7 +70,6 @@ MongoDB:
 - volume dati: `./data/mongo`
 - host port: `27017` di default
 - client web: `mongo-express` su `http://localhost:8081`
-- Prometheus: `http://localhost:9090`
 - Grafana: `http://localhost:3000`
 
 Nota: su HTTPS il browser mostrerà un avviso perché il certificato è self-signed.
@@ -84,14 +86,12 @@ Lo stack include ora:
 Porte locali di default:
 
 - Grafana: `http://localhost:3000`
-- Prometheus: `http://localhost:9090`
 
 Credenziali Grafana di default:
 
 ```env
 GRAFANA_ADMIN_USER=admin
 GRAFANA_ADMIN_PASSWORD=admin
-PROMETHEUS_HOST_PORT=9090
 GRAFANA_HOST_PORT=3000
 ```
 
@@ -173,6 +173,7 @@ Esempi:
 ./update-service.sh crawler
 ./update-service.sh calendario
 ./update-service.sh mongo-express
+./update-service.sh tuner
 ```
 
 ## Aggiornare tutto lo stack
@@ -334,6 +335,9 @@ Il front controller pubblica questi path:
 - `/watermarks/`
 - `/crawler/`
 - `/calendario/`
+- `/trumpet/`
+- `/tuner/`
+- `/plotterfun-node-editor/`
 
 ## Speed test
 

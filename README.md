@@ -188,6 +188,21 @@ Per aggiornare tutti i servizi definiti nel compose con un solo comando:
 
 Lo script enumera tutti i servizi del compose e invoca `./update-service.sh` per ciascuno, mostrando alla fine un riepilogo di eventuali errori.
 
+## Monitor TUI locale
+
+Per monitorare lo stato dei servizi del compose da terminale e lanciare l'update del singolo servizio:
+
+```bash
+./run-compose-monitor.sh
+```
+
+Comandi disponibili nella TUI:
+
+- `Freccia su/giu` oppure `j/k` per cambiare selezione
+- `Invio` oppure `u` per eseguire `./update-service.sh <service>`
+- `r` per refresh manuale
+- `q` per uscire
+
 ## MongoDB
 
 MongoDB e disponibile come servizio locale nello stack Docker e salva i dati in:

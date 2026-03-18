@@ -235,8 +235,6 @@ services:
       - nginx-exporter
       - blackbox-exporter
       - nginxlog-exporter
-    ports:
-      - "${PROMETHEUS_HOST_PORT:-9090}:9090"
     networks:
       - internal-services
 

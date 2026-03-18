@@ -87,7 +87,10 @@ function parseSingleServicePs(output, serviceName) {
     return {
       serviceName,
       containerName: '-',
-      status: 'Not created',
+      containerId: '',
+      status: 'Inactive',
+      topSummary: '0 proc',
+      topLines: [],
     };
   }
 
@@ -97,21 +100,88 @@ function parseSingleServicePs(output, serviceName) {
     return {
       serviceName,
       containerName: '-',
+      containerId: '',
       status: 'Unknown',
+      topSummary: 'n/a',
+      topLines: [],
     };
   }
 
   return {
     serviceName,
     containerName: cols[0] || '-',
+    containerId: '',
     status: cols[2] || 'Unknown',
+    topSummary: 'n/a',
+    topLines: [],
+  };
+}
+
+async function getContainerId(serviceName) {
+  const result = await shellExec('docker-compose', ['ps', '-q', serviceName]);
+  return result.stdout.trim();
+}
+
+function summarizeStatus(inspectData) {
+  const stateInfo = inspectData && inspectData.State ? inspectData.State : {};
+  const rawStatus = String(stateInfo.Status || 'unknown').toUpperCase();
+  const health = stateInfo.Health && stateInfo.Health.Status ? String(stateInfo.Health.Status).toUpperCase() : '';
+
+  if (rawStatus === 'RUNNING' && health) {
+    return `${rawStatus}/${health}`;
+  }
+  return rawStatus;
+}
+
+function parseTopOutput(output) {
+  const lines = output.split('\n').map((line) => line.trimRight()).filter(Boolean);
+  if (lines.length <= 1) {
+    return {
+      topSummary: '0 proc',
+      topLines: [],
+    };
+  }
+
+  const dataLines = lines.slice(1);
+  return {
+    topSummary: `${dataLines.length} proc`,
+    topLines: dataLines.slice(0, 5),
   };
 }
 
 async function getComposeStatus(serviceName) {
   try {
-    const { stdout } = await shellExec('docker-compose', ['ps', serviceName]);
-    return parseSingleServicePs(stdout, serviceName);
+    const containerId = await getContainerId(serviceName);
+    if (!containerId) {
+      return parseSingleServicePs('', serviceName);
+    }
+
+    const inspectResult = await shellExec('docker', ['inspect', containerId]);
+    const inspectRows = JSON.parse(inspectResult.stdout);
+    const inspectData = inspectRows && inspectRows[0] ? inspectRows[0] : null;
+    let topData = {
+      topSummary: '0 proc',
+      topLines: [],
+    };
+
+    try {
+      const topResult = await shellExec('docker', ['top', containerId]);
+      topData = parseTopOutput(topResult.stdout);
+    } catch (_error) {
+      topData = {
+        topSummary: '0 proc',
+        topLines: [],
+      };
+    }
+
+    return {
+      serviceName,
+      containerName: inspectData && inspectData.Name ? inspectData.Name.replace(/^\/+/, '') : containerId.slice(0, 12),
+      containerId,
+      status: summarizeStatus(inspectData),
+      topSummary: topData.topSummary,
+      topLines: topData.topLines,
+    };
   } catch (error) {
     const stderr = (error.stderr || '').trim();
     if (stderr) throw new Error(stderr);
@@ -121,7 +191,7 @@ async function getComposeStatus(serviceName) {
 
 function statusTone(status) {
   const value = String(status || '').toLowerCase();
-  if (value.includes('healthy') || value.startsWith('up')) {
+  if (value.includes('healthy') || value.startsWith('up') || value.startsWith('running')) {
     return ANSI.green;
   }
   if (value.includes('restarting') || value.includes('created')) {
@@ -142,13 +212,15 @@ function renderHeader(width) {
 function renderTable(width) {
   const indexWidth = 4;
   const nameWidth = 28;
-  const serviceWidth = 24;
-  const statusWidth = Math.max(24, width - indexWidth - nameWidth - serviceWidth - 10);
+  const serviceWidth = 22;
+  const statusWidth = 20;
+  const topWidth = Math.max(18, width - indexWidth - nameWidth - serviceWidth - statusWidth - 12);
   const header = [
     color(truncate('#', indexWidth), ANSI.gray),
     color(truncate('Container', nameWidth), ANSI.gray),
     color(truncate('Service', serviceWidth), ANSI.gray),
     color(truncate('Status', statusWidth), ANSI.gray),
+    color(truncate('Top', topWidth), ANSI.gray),
   ].join(' ');
 
   const lines = [header];
@@ -162,6 +234,7 @@ function renderTable(width) {
       truncate(service.containerName || '-', nameWidth),
       truncate(service.serviceName, serviceWidth),
       color(truncate(service.status || 'Not created', statusWidth), `${rowColor}${tone}`),
+      truncate(service.topSummary || '-', topWidth),
     ];
     lines.push(parts.join(' '));
   });
@@ -207,6 +280,19 @@ function renderFooter() {
     lines.push(color('Update log', `${ANSI.bold}${ANSI.blue}`));
     for (const line of state.updateLog.slice(-10)) {
       lines.push(truncate(line, process.stdout.columns || 120));
+    }
+  }
+
+  if (selected) {
+    lines.push('');
+    lines.push(color('Container top', `${ANSI.bold}${ANSI.blue}`));
+    lines.push(color(`Container: ${selected.containerName || '-'}    Status: ${selected.status || '-'}`, ANSI.gray));
+    if (selected.topLines && selected.topLines.length > 0) {
+      for (const line of selected.topLines) {
+        lines.push(truncate(line, process.stdout.columns || 120));
+      }
+    } else {
+      lines.push(color('No process data available for this service.', ANSI.gray));
     }
   }
 

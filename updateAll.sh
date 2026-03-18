@@ -1,35 +1,33 @@
 #!/bin/bash
-set -euo pipefail
+set -uo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
-if [[ ! -f .env ]]; then
-    echo "Missing .env file. Continuing with DOMAIN=localhost."
-fi
+mapfile -t SERVICES < <(docker-compose config --services)
 
-if [[ -f .env ]]; then
-    set -a
-    . ./.env
-    set +a
-fi
-
-if docker-compose ps -q | grep -q .; then
-    docker-compose down
-fi
-
-./scripts.sh
-
-if [[ ! -f certs/live/fullchain.pem || ! -f certs/live/privkey.pem ]]; then
-    echo "Missing TLS certificate files in certs/live."
+if [[ ${#SERVICES[@]} -eq 0 ]]; then
+    echo "No services found in docker-compose configuration."
     exit 1
 fi
 
-docker-compose build --no-cache front-controller
-docker-compose up -d --force-recreate
-echo "Project containers started."
-echo "Local HTTP:  http://localhost:55000"
-echo "Local HTTPS: https://localhost:55443"
-echo "Local Mongo:  mongodb://localhost:${MONGO_HOST_PORT:-27017}"
-echo "Mongo Express: http://localhost:${MONGO_EXPRESS_HOST_PORT:-8081}"
-echo "Public NAT required: TCP 80 -> 55000, TCP 443 -> 55443"
+FAILED_SERVICES=()
+
+for SERVICE_NAME in "${SERVICES[@]}"; do
+    echo
+    echo "=== Updating ${SERVICE_NAME} ==="
+
+    if ! "$SCRIPT_DIR/update-service.sh" "$SERVICE_NAME"; then
+        FAILED_SERVICES+=("$SERVICE_NAME")
+        echo "Update failed for: ${SERVICE_NAME}"
+    fi
+done
+
+echo
+if [[ ${#FAILED_SERVICES[@]} -gt 0 ]]; then
+    echo "Update completed with errors."
+    echo "Failed services: ${FAILED_SERVICES[*]}"
+    exit 1
+fi
+
+echo "All services updated successfully."

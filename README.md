@@ -175,6 +175,16 @@ Esempi:
 ./update-service.sh mongo-express
 ```
 
+## Aggiornare tutto lo stack
+
+Per aggiornare tutti i servizi definiti nel compose con un solo comando:
+
+```bash
+./updateAll.sh
+```
+
+Lo script enumera tutti i servizi del compose e invoca `./update-service.sh` per ciascuno, mostrando alla fine un riepilogo di eventuali errori.
+
 ## MongoDB
 
 MongoDB e disponibile come servizio locale nello stack Docker e salva i dati in:

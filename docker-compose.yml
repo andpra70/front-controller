@@ -165,7 +165,7 @@ services:
       CLIENT_DIST: /app/client-dist
       VOLUME_ROOT: /data
       CORS_ORIGIN: https://${DOMAIN:-localhost}:55443
-      MAX_EDITABLE_BYTES: 1048576
+      MAX_EDITABLE_BYTES: 26214400
     volumes:
       - ./data/files:/data
     networks:

@@ -175,6 +175,7 @@ services:
     image: ${OAUTH_SERVER_IMAGE:-docker.io/andpra70/oauth-server:latest}
     container_name: oauth-server
     restart: ${OAUTH_SERVER_RESTART:-unless-stopped}
+    user: "${OAUTH_SERVER_UID:-1000}:${OAUTH_SERVER_GID:-1000}"
     environment:
       BASE_PATH: ${OAUTH_SERVER_BASE_PATH:-/oauth-server}
       PORT: ${OAUTH_SERVER_INTERNAL_PORT:-9000}
@@ -198,7 +199,7 @@ services:
     ports:
       - "${OAUTH_SERVER_PORT:-9000}:${OAUTH_SERVER_INTERNAL_PORT:-9000}"
     volumes:
-      - ../app/oauth-server/data/oauth:/app/data/oauth
+      - oauth-server-data:/app/data/oauth
     networks:
       - public-edge
       - internal-services
@@ -320,3 +321,4 @@ networks:
 volumes:
   prometheus-data:
   grafana-data:
+  oauth-server-data:

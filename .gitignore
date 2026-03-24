@@ -1,3 +1,7 @@
 data
 export-mongo/*
 !export-mongo/.gitignore
+.env
+node_modules
+dist
+logs

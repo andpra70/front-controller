@@ -34,6 +34,7 @@ scrape_configs:
           - https://front-controller:55443/trumpet/
           - https://front-controller:55443/tuner/
           - https://front-controller:55443/fileserver/
+          - https://front-controller:55443/oauth-server/
           - https://front-controller:55443/mongo-express/
           - https://front-controller:55443/plotterfun-node-editor/
           - https://front-controller:55443/prometheus/

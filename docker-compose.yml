@@ -172,9 +172,6 @@ services:
       - internal-services
 
   oauth-server:
-    build:
-      context: ../app/oauth-server
-      dockerfile: Dockerfile
     image: ${OAUTH_SERVER_IMAGE:-docker.io/andpra70/oauth-server:latest}
     container_name: oauth-server
     restart: ${OAUTH_SERVER_RESTART:-unless-stopped}

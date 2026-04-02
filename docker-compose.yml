@@ -169,6 +169,7 @@ services:
     volumes:
       - ./data/files:/data
     networks:
+      - public-edge
       - internal-services
 
   oauth-server:

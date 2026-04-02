@@ -167,7 +167,7 @@ services:
       CORS_ORIGIN: https://${DOMAIN:-localhost}:55443
       MAX_EDITABLE_BYTES: 26214400
       MAX_BINARY_FILE_BYTES: 52428800
-      OAUTH_ALLOW_SELF_SIGNED_TLS: true
+      OAUTH_ALLOW_SELF_SIGNED_TLS: "true"
       TOKEN_VALIDATION_CACHE_TTL_MS: 15000
     volumes:
       - ./data/files:/data

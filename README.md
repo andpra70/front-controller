@@ -31,6 +31,14 @@ Creare `.env` nella root del progetto:
 
 ```env
 DOMAIN=zanotti.iliadboxos.it
+```
+
+`DOMAIN` viene usato per generare il certificato self-signed.
+Le variabili OAuth non sono piu gestite dal `.env` root: `oauth-server` usa il suo `.env` interno.
+
+Variabili opzionali che puoi aggiungere al `.env` root:
+
+```env
 MONGO_ROOT_USERNAME=root
 MONGO_ROOT_PASSWORD=rootpass
 MONGO_DATABASE=app
@@ -38,10 +46,11 @@ MONGO_HOST_PORT=27017
 MONGO_EXPRESS_HOST_PORT=8081
 MONGO_EXPRESS_USERNAME=admin
 MONGO_EXPRESS_PASSWORD=adminpass
+GRAFANA_ADMIN_USER=admin
+GRAFANA_ADMIN_PASSWORD=admin
+GRAFANA_HOST_PORT=3000
+OAUTH2_PROXY_COOKIE_SECRET=isJQ8H17CXA4wQbilfHtRRRNDxXzbxLSx8bKxJ-hhPA=
 ```
-
-`DOMAIN` viene usato per generare il certificato self-signed.
-Le variabili `MONGO_*` configurano il container MongoDB locale.
 
 ## Avvio locale
 

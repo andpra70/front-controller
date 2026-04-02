@@ -172,36 +172,47 @@ services:
       - internal-services
 
   oauth-server:
-    image: ${OAUTH_SERVER_IMAGE:-docker.io/andpra70/oauth-server:latest}
+    image: docker.io/andpra70/oauth-server:latest
     container_name: oauth-server
-    restart: ${OAUTH_SERVER_RESTART:-unless-stopped}
-    user: "${OAUTH_SERVER_UID:-1000}:${OAUTH_SERVER_GID:-1000}"
-    environment:
-      BASE_PATH: ${OAUTH_SERVER_BASE_PATH:-/oauth-server}
-      PORT: ${OAUTH_SERVER_INTERNAL_PORT:-9000}
-      ISSUER: https://${DOMAIN:-localhost}:55443/oauth-server
-      TRUST_PROXY: ${OAUTH_SERVER_TRUST_PROXY:-true}
-      COOKIE_KEYS: ${COOKIE_KEYS}
-      ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
-      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
-      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@example.local}
-      DEFAULT_CLIENT_ID: ${DEFAULT_CLIENT_ID:-fileserver-web}
-      DEFAULT_CLIENT_AUTH_METHOD: ${DEFAULT_CLIENT_AUTH_METHOD:-none}
-      DEFAULT_CLIENT_SECRET: ${DEFAULT_CLIENT_SECRET:-secret_key_for_fileserver_web}
-      DEFAULT_CLIENT_REDIRECT_URIS: https://${DOMAIN:-localhost}:55443/oauth-server/app/callback,https://${DOMAIN:-localhost}:55443/oauth-server/example/callback,https://localhost:55443/oauth-server/app/callback,https://localhost:55443/oauth-server/example/callback
-      DEFAULT_CLIENT_POST_LOGOUT_REDIRECT_URIS: https://${DOMAIN:-localhost}:55443/oauth-server/app,https://${DOMAIN:-localhost}:55443/oauth-server/example,https://localhost:55443/oauth-server/app,https://localhost:55443/oauth-server/example
-      SETUP_TOKEN: ${SETUP_TOKEN}
-      ALLOWED_ORIGINS: https://${DOMAIN:-localhost}:55443,http://localhost:9000,http://localhost:8080,http://localhost
-      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
-      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
-      GOOGLE_CALLBACK_PATH: /oauth-server/auth/google/callback
-      GOOGLE_CALLBACK_URL: https://${DOMAIN:-localhost}:55443/oauth-server/auth/google/callback
+    restart: unless-stopped
+    user: "1000:1000"
     ports:
-      - "${OAUTH_SERVER_PORT:-9000}:${OAUTH_SERVER_INTERNAL_PORT:-9000}"
+      - "9000:9000"
     volumes:
       - oauth-server-data:/app/data/oauth
     networks:
       - public-edge
+      - internal-services
+
+  oauth2-proxy:
+    image: quay.io/oauth2-proxy/oauth2-proxy:v7.13.0
+    container_name: oauth2-proxy
+    restart: unless-stopped
+    depends_on:
+      - oauth-server
+    environment:
+      OAUTH2_PROXY_PROVIDER: oidc
+      OAUTH2_PROXY_PROVIDER_DISPLAY_NAME: OAuth Server
+      OAUTH2_PROXY_OIDC_ISSUER_URL: https://${DOMAIN:-localhost}:55443/oauth-server
+      OAUTH2_PROXY_CLIENT_ID: fileserver-web
+      OAUTH2_PROXY_CLIENT_SECRET: change-this-oauth2-proxy-client-secret
+      OAUTH2_PROXY_SCOPE: openid profile email offline_access
+      OAUTH2_PROXY_EMAIL_DOMAINS: "*"
+      OAUTH2_PROXY_HTTP_ADDRESS: 0.0.0.0:4180
+      OAUTH2_PROXY_UPSTREAMS: static://202
+      OAUTH2_PROXY_COOKIE_SECRET: ${OAUTH2_PROXY_COOKIE_SECRET:-isJQ8H17CXA4wQbilfHtRRRNDxXzbxLSx8bKxJ-hhPA=}
+      OAUTH2_PROXY_COOKIE_SECURE: "true"
+      OAUTH2_PROXY_REVERSE_PROXY: "true"
+      OAUTH2_PROXY_SET_XAUTHREQUEST: "true"
+      OAUTH2_PROXY_SET_AUTHORIZATION_HEADER: "true"
+      OAUTH2_PROXY_PASS_ACCESS_TOKEN: "true"
+      OAUTH2_PROXY_PASS_AUTHORIZATION_HEADER: "true"
+      OAUTH2_PROXY_SKIP_PROVIDER_BUTTON: "true"
+      OAUTH2_PROXY_CODE_CHALLENGE_METHOD: S256
+      OAUTH2_PROXY_INSECURE_OIDC_ALLOW_UNVERIFIED_EMAIL: "true"
+      OAUTH2_PROXY_SSL_INSECURE_SKIP_VERIFY: "true"
+      OAUTH2_PROXY_WHITELIST_DOMAINS: ${DOMAIN:-localhost}:55443,localhost:55443
+    networks:
       - internal-services
 
   plotterfun-node-editor:

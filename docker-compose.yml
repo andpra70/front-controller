@@ -23,7 +23,7 @@ services:
     healthcheck:
       test:
         - CMD-SHELL
-        - wget --no-check-certificate --quiet --spider https://127.0.0.1:55443/__monitoring__/ok || exit 1
+        - wget --quiet --spider http://127.0.0.1:55000/__monitoring__/ok || exit 1
       interval: 30s
       timeout: 5s
       retries: 5
@@ -229,8 +229,7 @@ services:
     command:
       - --nginx.scrape-uri=http://front-controller:55000/__monitoring__/nginx_status
     depends_on:
-      front-controller:
-        condition: service_healthy
+      - front-controller
     networks:
       - internal-services
 
@@ -243,8 +242,7 @@ services:
     volumes:
       - ./blackbox/blackbox.yml:/etc/blackbox_exporter/blackbox.yml:ro
     depends_on:
-      front-controller:
-        condition: service_healthy
+      - front-controller
     networks:
       - internal-services
 
@@ -259,8 +257,7 @@ services:
       - ./nginxlog-exporter/config.yml:/etc/prometheus-nginxlog-exporter/config.yml:ro
       - ./data/logs/nginx:/var/log/nginx:ro
     depends_on:
-      front-controller:
-        condition: service_healthy
+      - front-controller
     networks:
       - internal-services
 

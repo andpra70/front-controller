@@ -140,11 +140,9 @@ services:
       - internal-services
 
   ginnastica:
-    build:
-      context: ../app/ginnastica
-      dockerfile: Dockerfile
-    image: ginnastica-calistenics-app:latest
+    image: docker.io/andpra70/ginnastica-calistenics-app:latest
     container_name: ginnastica
+    pull_policy: always
     restart: unless-stopped
     networks:
       - internal-services

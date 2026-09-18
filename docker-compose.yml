@@ -183,8 +183,11 @@ services:
       PORT: "3000"
       BASE_PATH: /camera/
       TRUST_PROXY_HOPS: "1"
-    devices:
-      - ${CAMERA_DEVICE:-/dev/video0}:${CAMERA_DEVICE:-/dev/video0}
+      CAMERA_ALLOWLIST: ""
+    volumes:
+      - /dev:/dev
+    device_cgroup_rules:
+      - "c 81:* rwm"
     networks:
       - internal-services
 

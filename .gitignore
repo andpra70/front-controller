@@ -1,4 +1,5 @@
 data
+letsencrypt
 export-mongo/*
 !export-mongo/.gitignore
 .env

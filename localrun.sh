@@ -12,6 +12,4 @@ if docker-compose ps -q | grep -q .; then
     docker-compose down
 fi
 
-./scripts.sh
-
 docker-compose up --build

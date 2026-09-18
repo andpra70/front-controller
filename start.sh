@@ -18,18 +18,11 @@ if docker-compose ps -q | grep -q .; then
     docker-compose down
 fi
 
-./scripts.sh
-
-if [[ ! -f certs/live/fullchain.pem || ! -f certs/live/privkey.pem ]]; then
-    echo "Missing TLS certificate files in certs/live."
-    exit 1
-fi
-
 docker-compose build --no-cache front-controller
 docker-compose up -d --force-recreate
 echo "Project containers started."
-echo "Local HTTP:  http://localhost:55000"
-echo "Local HTTPS: https://localhost:55443"
+echo "HTTP:        http://${DOMAIN:-localhost}"
+echo "Public URL:  https://${DOMAIN:-localhost}"
 echo "Local Mongo:  mongodb://localhost:${MONGO_HOST_PORT:-27017}"
 echo "Mongo Express: http://localhost:${MONGO_EXPRESS_HOST_PORT:-8081}"
-echo "Public NAT required: TCP 80 -> 55000, TCP 443 -> 55443"
+echo "Public NAT required: TCP 80 -> 80, TCP 443 -> 443"

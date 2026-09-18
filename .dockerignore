@@ -9,4 +9,8 @@ start.sh
 stop.sh
 stopAll.sh
 data
+letsencrypt
 export-mongo
+certs
+logs
+*.log

@@ -19,6 +19,8 @@ services:
         condition: service_started
       calendario:
         condition: service_started
+      camera:
+        condition: service_started
       ginnastica:
         condition: service_started
       trumpet:
@@ -169,6 +171,20 @@ services:
     container_name: calendario
     pull_policy: always
     restart: unless-stopped
+    networks:
+      - internal-services
+
+  camera:
+    image: docker.io/andpra70/ubuntu-camera-viewer:latest
+    container_name: camera
+    pull_policy: always
+    restart: unless-stopped
+    environment:
+      PORT: "3000"
+      BASE_PATH: /camera/
+      TRUST_PROXY_HOPS: "1"
+    devices:
+      - ${CAMERA_DEVICE:-/dev/video0}:${CAMERA_DEVICE:-/dev/video0}
     networks:
       - internal-services
 

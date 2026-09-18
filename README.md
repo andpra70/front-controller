@@ -14,6 +14,7 @@ Espone un punto di ingresso unico verso i servizi interni:
 - `catalogo-opere`
 - `crawler`
 - `calendario`
+- `camera`
 - `ginnastica`
 - `trumpet`
 - `tuner`
@@ -386,6 +387,7 @@ Il front controller pubblica questi path:
 - `/watermarks/`
 - `/crawler/`
 - `/calendario/`
+- `/camera/`
 - `/ginnastica/`
 - `/trumpet/`
 - `/tuner/`

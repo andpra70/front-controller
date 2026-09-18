@@ -1,9 +1,10 @@
 # Front Controller
 
-Front controller Docker-based con `nginx` in HTTPS self-signed su:
+Front controller Docker-based con:
 
-- `http://localhost:55000`
-- `https://localhost:55443`
+- un solo `nginx` pubblico sulle porte `80` e `443`
+- certificato Let's Encrypt richiesto e rinnovato automaticamente da Certbot
+- log effimeri nel container, ruotati giornalmente e conservati per 7 giorni
 
 Espone un punto di ingresso unico verso i servizi interni:
 
@@ -24,7 +25,6 @@ Espone un punto di ingresso unico verso i servizi interni:
 
 - Docker
 - Docker Compose (`docker-compose`)
-- `openssl`
 
 ## Configurazione
 
@@ -32,9 +32,13 @@ Creare `.env` nella root del progetto:
 
 ```env
 DOMAIN=zanotti.iliadboxos.it
+LETSENCRYPT_EMAIL=nome@example.com
 ```
 
-`DOMAIN` viene usato per generare il certificato self-signed.
+`DOMAIN` viene usato per HTTPS, OAuth e CORS. Certbot salva certificati e stato
+in `./letsencrypt`; il front-controller rileva automaticamente emissioni e
+rinnovi tramite un volume certificati dedicato e ricarica Nginx.
+`LETSENCRYPT_EMAIL` riceve gli avvisi di Let's Encrypt.
 Le variabili OAuth non sono piu gestite dal `.env` root: `oauth-server` usa il suo `.env` interno.
 
 Variabili opzionali che puoi aggiungere al `.env` root:
@@ -47,9 +51,6 @@ MONGO_HOST_PORT=27017
 MONGO_EXPRESS_HOST_PORT=8081
 MONGO_EXPRESS_USERNAME=admin
 MONGO_EXPRESS_PASSWORD=adminpass
-GRAFANA_ADMIN_USER=admin
-GRAFANA_ADMIN_PASSWORD=admin
-GRAFANA_HOST_PORT=3000
 ```
 
 ## Avvio locale
@@ -63,15 +64,13 @@ Per avviare tutto da zero:
 Lo script fa queste operazioni:
 
 1. ferma lo stack corrente se esiste
-2. genera i certificati self-signed in `certs/live`
-3. verifica la presenza di `fullchain.pem` e `privkey.pem`
-4. builda senza cache il solo `front-controller`
-5. avvia tutto lo stack con `docker-compose`
+2. builda senza cache il `front-controller`
+3. avvia lo stack, incluso Certbot
 
 Endpoint locali:
 
-- `http://localhost:55000`
-- `https://localhost:55443`
+- `http://<DOMAIN>` (redirect a HTTPS)
+- `https://<DOMAIN>`
 
 MongoDB:
 
@@ -79,48 +78,76 @@ MongoDB:
 - volume dati: `./data/mongo`
 - host port: `27017` di default
 - client web: `mongo-express` su `http://localhost:8081`
-- Grafana: `http://localhost:3000`
 
-Nota: su HTTPS il browser mostrerà un avviso perché il certificato è self-signed.
+## Configurare HTTPS con Let's Encrypt
 
-## Monitoraggio
+Prima dell'avvio, il record DNS A/AAAA di `DOMAIN` deve puntare all'IP pubblico
+del server. Se il server è dietro NAT, inoltrare TCP `80` e `443` alle stesse
+porte del server Docker. La porta `80` è necessaria anche per la challenge HTTP
+di Let's Encrypt.
 
-Lo stack include ora:
+Avviare lo stack con `./start.sh`. Nginx parte immediatamente con un certificato
+temporaneo valido un giorno; Certbot esegue la challenge HTTP, installa il
+certificato pubblico e Nginx lo carica automaticamente entro 60 secondi.
 
-- `nginx-prometheus-exporter` per le metriche native di `nginx`
-- `blackbox-exporter` per sonde HTTP via `nginx`
-- `prometheus` per scraping e storage metriche
-- `grafana` con dashboard provisionata automaticamente
+Non usare `localhost` per richiedere un certificato pubblico.
 
-Porte locali di default:
+### Dove si trova il certificato
 
-- Grafana: `http://localhost:3000`
+Certbot conserva lo stato persistente nella directory del progetto:
 
-Credenziali Grafana di default:
-
-```env
-GRAFANA_ADMIN_USER=admin
-GRAFANA_ADMIN_PASSWORD=admin
-GRAFANA_HOST_PORT=3000
+```text
+./letsencrypt/
 ```
 
-Sonde `nginx` disponibili:
+Per il dominio configurato, i riferimenti principali sull'host sono:
 
-- `https://localhost:55443/__monitoring__/ok` restituisce `200`
-- `https://localhost:55443/__monitoring__/ko` restituisce `503`
-- `https://localhost:55443/__monitoring__/dos` restituisce `429`
-- `https://localhost:55443/__monitoring__/rate-limit` usa `limit_req` e restituisce `429` in caso di burst
+```text
+./letsencrypt/live/<DOMAIN>/fullchain.pem
+./letsencrypt/live/<DOMAIN>/privkey.pem
+```
 
-Metriche `nginx` esposte internamente:
+Con `DOMAIN=belle.iliadboxos.it` diventano:
 
-- `http://front-controller:55000/__monitoring__/nginx_status`
+```text
+./letsencrypt/live/belle.iliadboxos.it/fullchain.pem
+./letsencrypt/live/belle.iliadboxos.it/privkey.pem
+```
 
-La dashboard Grafana mostra:
+Questi file sono link gestiti da Certbot verso le versioni numerate presenti
+in `./letsencrypt/archive/<DOMAIN>/`. La configurazione del rinnovo si trova in
+`./letsencrypt/renewal/<DOMAIN>.conf`. Le directory e la chiave privata sono
+intenzionalmente accessibili solo a `root`: non modificarne proprietario o
+permessi e non aggiungere `./letsencrypt` al repository Git.
 
-- richieste e connessioni `nginx`
-- stato reachability di tutti gli applicativi pubblicati dietro il reverse proxy
-- sonde dedicate `OK`, `KO` e `DOS`
-- latenza delle chiamate verso gli applicativi passando da `nginx`
+Per mantenere Nginx non-root, Certbot pubblica inoltre una copia runtime nel
+volume Docker `front-controller_nginx-certs`, montato nei container come:
+
+```text
+/etc/nginx-certs/fullchain.pem
+/etc/nginx-certs/privkey.pem
+```
+
+Nginx copia questi file nella propria directory effimera
+`/tmp/front-controller-tls` e ricarica la configurazione quando il certificato
+cambia. La fonte da salvare nei backup è sempre `./letsencrypt`, non il volume
+runtime.
+
+Per controllare il certificato attualmente pubblicato:
+
+```bash
+openssl s_client -connect "${DOMAIN}:443" -servername "${DOMAIN}" </dev/null 2>/dev/null \
+  | openssl x509 -noout -subject -issuer -dates
+```
+
+Certbot controlla il rinnovo ogni 12 ore. Dopo un rinnovo, Nginx carica il nuovo
+certificato entro 60 secondi.
+
+## Log Nginx
+
+I file `front-controller-access.log` ed `error.log` restano nel filesystem
+effimero del container. Sono ruotati ogni giorno, compressi e conservati per
+7 rotazioni. Vengono eliminati quando il container viene rimosso.
 
 ## Avvio in foreground
 
@@ -299,7 +326,7 @@ Esempio Ubuntu/Debian da macchina pulita.
 
 ```bash
 sudo apt update
-sudo apt install -y docker.io docker-compose-v2 openssl git
+sudo apt install -y docker.io docker-compose-v2 git
 sudo systemctl enable --now docker
 ```
 
@@ -321,6 +348,7 @@ cd front-controller
 ```bash
 cat > .env <<'EOF'
 DOMAIN=zanotti.iliadboxos.it
+LETSENCRYPT_EMAIL=nome@example.com
 EOF
 ```
 
@@ -335,21 +363,17 @@ chmod +x *.sh
 
 ```bash
 docker-compose ps
-curl -I http://127.0.0.1:55000
-curl -Ik https://127.0.0.1:55443
+curl -I http://zanotti.iliadboxos.it
+curl -I https://zanotti.iliadboxos.it
 ```
 
 ### 6. Esporre dall'esterno
 
 Se il server è dietro router/NAT, inoltrare:
 
-- porta pubblica `80` verso `55000` del server
-- porta pubblica `443` verso `55443` del server
+- porta pubblica `80` verso `80` del server
+- porta pubblica `443` verso `443` del server
 
-Se invece vuoi usare direttamente le porte alte anche dall'esterno:
-
-- `55000 -> 55000`
-- `55443 -> 55443`
 
 ## Routing applicazioni
 
@@ -380,6 +404,20 @@ La homepage include uno speed test browser-side che usa:
 - `POST /__speedtest__/upload`
 
 ## Troubleshooting
+
+Per verificare Certbot e forzare un nuovo tentativo dopo aver corretto DNS o NAT:
+
+```bash
+docker-compose restart certbot
+docker-compose logs -f certbot
+```
+
+Per verificare che il front-controller sia healthy:
+
+```bash
+docker-compose ps front-controller certbot
+curl -I "https://${DOMAIN}/"
+```
 
 Se il browser mostra errori strani dopo una modifica di configurazione:
 

@@ -13,8 +13,6 @@ if [[ ! -f .env ]]; then
     echo "Missing .env file. Continuing with DOMAIN=localhost."
 fi
 
-./scripts.sh
-
 docker build -t "$FULL_IMAGE" .
 docker push "$FULL_IMAGE"
 

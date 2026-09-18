@@ -26,22 +26,14 @@ if docker-compose -p "$STACK_NAME" ps -q | grep -q .; then
     docker-compose -p "$STACK_NAME" down
 fi
 
-./scripts.sh
-
-if [[ ! -f certs/live/fullchain.pem || ! -f certs/live/privkey.pem ]]; then
-    echo "Missing TLS certificate files in certs/live."
-    exit 1
-fi
-
-docker-compose -p "$STACK_NAME" pull app-index galleria minicms watermarks catalogo-opere crawler calendario || true
+docker-compose -p "$STACK_NAME" pull certbot galleria minicms watermarks catalogo-opere crawler calendario || true
 docker-compose -p "$STACK_NAME" build --no-cache front-controller
 docker-compose -p "$STACK_NAME" up -d --force-recreate
 
 echo "Stack started"
 echo "Front controller image: $FULL_IMAGE"
-echo "Local HTTP:  http://localhost:55000"
-echo "Local HTTPS: https://localhost:55443"
+echo "HTTP URL:  http://${DOMAIN}"
 echo "Local Mongo:  mongodb://localhost:${MONGO_HOST_PORT:-27017}"
 echo "Mongo Express: http://localhost:${MONGO_EXPRESS_HOST_PORT:-8081}"
-echo "HTTPS URL: https://${DOMAIN}:55443"
-echo "Public NAT required: TCP 80 -> 55000, TCP 443 -> 55443"
+echo "HTTPS URL: https://${DOMAIN}"
+echo "Public NAT required: TCP 80 -> 80, TCP 443 -> 443"

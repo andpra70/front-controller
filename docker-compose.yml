@@ -21,6 +21,8 @@ services:
         condition: service_started
       camera:
         condition: service_started
+      gpdr:
+        condition: service_started
       ginnastica:
         condition: service_started
       trumpet:
@@ -188,6 +190,14 @@ services:
       - /dev:/dev
     device_cgroup_rules:
       - "c 81:* rwm"
+    networks:
+      - internal-services
+
+  gpdr:
+    image: docker.io/andpra70/gdpr-compliance-widget:latest
+    container_name: gpdr
+    pull_policy: always
+    restart: unless-stopped
     networks:
       - internal-services
 

@@ -15,6 +15,7 @@ Espone un punto di ingresso unico verso i servizi interni:
 - `crawler`
 - `calendario`
 - `camera`
+- `gpdr`
 - `ginnastica`
 - `trumpet`
 - `tuner`
@@ -388,6 +389,7 @@ Il front controller pubblica questi path:
 - `/crawler/`
 - `/calendario/`
 - `/camera/`
+- `/gpdr/`
 - `/ginnastica/`
 - `/trumpet/`
 - `/tuner/`

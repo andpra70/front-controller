@@ -16,16 +16,15 @@ if ! docker compose config --services | grep -Fxq "$SERVICE_NAME"; then
     exit 1
 fi
 
-echo "Stopping service: $SERVICE_NAME"
-docker compose stop "$SERVICE_NAME" || true
-
-echo "Removing stopped container for: $SERVICE_NAME"
-docker compose rm -f "$SERVICE_NAME" || true
-
 echo "Pulling latest image for: $SERVICE_NAME"
-docker compose pull "$SERVICE_NAME"
+if ! docker compose pull "$SERVICE_NAME"; then
+    echo "Pull unavailable for ${SERVICE_NAME}; continuing with its local build configuration."
+fi
+
+echo "Building service when a build context is configured: $SERVICE_NAME"
+docker compose build --pull "$SERVICE_NAME"
 
 echo "Starting service: $SERVICE_NAME"
-docker compose up -d --remove-orphans "$SERVICE_NAME"
+docker compose up -d --no-deps --force-recreate --pull never "$SERVICE_NAME"
 
 echo "Service updated: $SERVICE_NAME"

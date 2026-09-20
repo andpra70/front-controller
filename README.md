@@ -22,8 +22,10 @@ Espone un punto di ingresso unico verso i servizi interni:
 - `fileserver`
 - `plotterfun-node-editor`
 - `mongo`
-- `vfs2`
 - `vfs2-example`
+
+Il servizio `fileserver` include anche widget e API VFS2; non esiste più un
+container `vfs-service` separato.
 
 ## Requisiti
 
@@ -201,7 +203,8 @@ Per tirare le immagini remote e rialzare lo stack:
 
 ## Aggiornare un singolo servizio
 
-Per fermare un servizio, scaricare l'immagine aggiornata e riavviarlo:
+Per aggiornare un servizio, scaricare l'immagine disponibile, eseguire la build
+quando il servizio ha un `build:` locale e ricreare soltanto quel container:
 
 ```bash
 ./update-service.sh <service-name>
@@ -236,6 +239,11 @@ Per monitorare lo stato dei servizi del compose da terminale e lanciare l'update
 ```
 
 Il riquadro del servizio selezionato mostra stato runtime, processi `top`, RAM, uso disco del container e live tail log.
+
+Il monitor usa il comando Compose V2 (`docker compose`). L'update non avvia né
+ricrea le dipendenze del servizio selezionato e usa `--pull never` nella fase di
+avvio, evitando che un'immagine appena costruita venga sostituita da un vecchio
+tag presente nel registry.
 
 Comandi disponibili nella TUI:
 

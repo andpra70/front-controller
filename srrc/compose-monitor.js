@@ -11,6 +11,8 @@ const spawn = childProcess.spawn;
 const ROOT_DIR = path.resolve(__dirname, '..');
 const UPDATE_SCRIPT = path.join(ROOT_DIR, 'update-service.sh');
 const REFRESH_INTERVAL_MS = 5000;
+const COMPOSE_COMMAND = 'docker';
+const COMPOSE_ARGS = ['compose'];
 
 const ANSI = {
   reset: '\x1b[0m',
@@ -77,7 +79,7 @@ function shellExec(file, args, options = {}) {
 }
 
 async function getComposeServices() {
-  const { stdout } = await shellExec('docker-compose', ['config', '--services']);
+  const { stdout } = await shellExec(COMPOSE_COMMAND, [...COMPOSE_ARGS, 'config', '--services']);
   return stdout
     .split('\n')
     .map((line) => line.trim())
@@ -121,7 +123,7 @@ function parseSingleServicePs(output, serviceName) {
 }
 
 async function getContainerId(serviceName) {
-  const result = await shellExec('docker-compose', ['ps', '-q', serviceName]);
+  const result = await shellExec(COMPOSE_COMMAND, [...COMPOSE_ARGS, 'ps', '--all', '--quiet', serviceName]);
   return result.stdout.trim();
 }
 
@@ -227,7 +229,7 @@ async function getComposeStatus(serviceName) {
 
     try {
       const logsResult = await shellExec('docker', ['logs', '--tail', '5', containerId]);
-      logLines = logsResult.stdout
+      logLines = `${logsResult.stdout || ''}\n${logsResult.stderr || ''}`
         .replace(/\r/g, '')
         .split('\n')
         .filter(Boolean)
@@ -310,7 +312,7 @@ function renderTable(width) {
   });
 
   if (state.services.length === 0) {
-    lines.push(color('No services found in docker-compose configuration.', ANSI.red));
+    lines.push(color('No services found in Docker Compose configuration.', ANSI.red));
   }
   return lines.join('\n');
 }

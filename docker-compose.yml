@@ -30,12 +30,10 @@ services:
       tuner:
         condition: service_started
       fileserver:
-        condition: service_started
+        condition: service_healthy
       plotterfun-node-editor:
         condition: service_started
       oauth-server:
-        condition: service_healthy
-      vfs-service:
         condition: service_healthy
       example:
         condition: service_healthy
@@ -234,40 +232,6 @@ services:
     networks:
       - internal-services
 
-  vfs-service:
-    build:
-      context: ../app/vfs2
-      dockerfile: Dockerfile
-    image: docker.io/andpra70/vfs2-service:latest
-    container_name: vfs2-service
-    restart: unless-stopped
-    depends_on:
-      redis:
-        condition: service_healthy
-      minio-init:
-        condition: service_completed_successfully
-    environment:
-      PORT: 3002
-      REDIS_URL: redis://redis:6379/0
-      S3_ENDPOINT: http://minio:9000
-      S3_REGION: us-east-1
-      S3_BUCKET: public-assets
-      S3_ACCESS_KEY: ${MINIO_ROOT_USER:-vfsadmin}
-      S3_SECRET_KEY: ${MINIO_ROOT_PASSWORD:?Set MINIO_ROOT_PASSWORD in .env}
-      JWT_ISSUER: ${JWT_ISSUER:-vfs-auth}
-      JWT_AUDIENCE: ${JWT_AUDIENCE:-vfs-clients}
-      ALLOWED_ORIGINS: https://${DOMAIN},https://localhost
-      PUBLIC_KEY_PATH: /run/secrets/public.pem
-    volumes:
-      - ../app/vfs2/keys/public.pem:/run/secrets/public.pem:ro
-    healthcheck:
-      test: ["CMD", "wget", "--quiet", "--spider", "http://127.0.0.1:3002/healthz"]
-      interval: 10s
-      timeout: 3s
-      retries: 10
-    networks:
-      - internal-services
-
   example:
     build:
       context: ../app/example
@@ -350,6 +314,37 @@ services:
     image: docker.io/andpra70/fileserver:latest
     container_name: front-controller-fileserver
     restart: unless-stopped
+    depends_on:
+      redis:
+        condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
+    environment:
+      PORT: 8080
+      REDIS_URL: redis://redis:6379/0
+      S3_ENDPOINT: http://minio:9000
+      S3_REGION: us-east-1
+      S3_BUCKET: public-assets
+      S3_ACCESS_KEY: ${MINIO_ROOT_USER:-vfsadmin}
+      S3_SECRET_KEY: ${MINIO_ROOT_PASSWORD:?Set MINIO_ROOT_PASSWORD in .env}
+      JWT_ISSUER: ${JWT_ISSUER:-vfs-auth}
+      JWT_AUDIENCE: ${JWT_AUDIENCE:-vfs-clients}
+      ALLOWED_ORIGINS: https://${DOMAIN},https://localhost
+      PUBLIC_KEY_PATH: /run/secrets/public.pem
+      MAX_UPLOAD_BYTES: ${MAX_UPLOAD_BYTES:-104857600}
+    volumes:
+      - ../app/fileserver/keys/public.pem:/run/secrets/public.pem:ro
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - >-
+          Promise.all([fetch('http://127.0.0.1:8080/healthz'),fetch('http://127.0.0.1:8080/widget.js')]).then(r=>process.exit(r.every(x=>x.ok)?0:1)).catch(()=>process.exit(1))
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
     networks:
       - public-edge
       - internal-services

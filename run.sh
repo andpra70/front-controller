@@ -3,6 +3,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
+mkdir -p data/mongo data/minio data/redis export-mongo export-minio
 
 REGISTRY="${REGISTRY:-docker.io/andpra70}"
 IMAGE_NAME="${IMAGE_NAME:-front-controller}"
@@ -22,13 +23,13 @@ if [[ -f .env ]]; then
     DOMAIN="${DOMAIN:-localhost}"
 fi
 
-if docker-compose -p "$STACK_NAME" ps -q | grep -q .; then
-    docker-compose -p "$STACK_NAME" down
+if docker compose -p "$STACK_NAME" ps -q | grep -q .; then
+    docker compose -p "$STACK_NAME" down
 fi
 
-docker-compose -p "$STACK_NAME" pull certbot galleria minicms watermarks catalogo-opere crawler calendario || true
-docker-compose -p "$STACK_NAME" build --no-cache front-controller
-docker-compose -p "$STACK_NAME" up -d --force-recreate
+docker compose -p "$STACK_NAME" pull certbot galleria minicms watermarks catalogo-opere crawler calendario || true
+docker compose -p "$STACK_NAME" build --no-cache front-controller
+docker compose -p "$STACK_NAME" up -d --force-recreate
 
 echo "Stack started"
 echo "Front controller image: $FULL_IMAGE"

@@ -4,7 +4,7 @@ set -uo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
-mapfile -t SERVICES < <(docker-compose config --services)
+mapfile -t SERVICES < <(docker compose config --services)
 
 if [[ ${#SERVICES[@]} -eq 0 ]]; then
     echo "No services found in docker-compose configuration."

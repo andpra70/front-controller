@@ -20,7 +20,7 @@ if [[ -f .env ]]; then
 fi
 
 mongo_eval() {
-    docker-compose exec -T mongo mongosh --quiet \
+    docker compose exec -T mongo mongosh --quiet \
         --username "$MONGO_ROOT_USERNAME" \
         --password "$MONGO_ROOT_PASSWORD" \
         --authenticationDatabase admin \

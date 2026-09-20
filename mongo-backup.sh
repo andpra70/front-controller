@@ -21,7 +21,7 @@ fi
 mkdir -p "$EXPORT_DIR"
 
 echo "Inspecting Mongo databases before backup..."
-docker-compose exec -T mongo mongosh --quiet \
+docker compose exec -T mongo mongosh --quiet \
     --username "$MONGO_ROOT_USERNAME" \
     --password "$MONGO_ROOT_PASSWORD" \
     --authenticationDatabase admin \
@@ -44,7 +44,7 @@ docker-compose exec -T mongo mongosh --quiet \
         }
     '
 
-docker-compose exec -T mongo mongodump \
+docker compose exec -T mongo mongodump \
     --username "$MONGO_ROOT_USERNAME" \
     --password "$MONGO_ROOT_PASSWORD" \
     --authenticationDatabase admin \

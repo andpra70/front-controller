@@ -2,6 +2,8 @@ data
 letsencrypt
 export-mongo/*
 !export-mongo/.gitignore
+export-minio/*
+!export-minio/.gitignore
 .env
 node_modules
 dist

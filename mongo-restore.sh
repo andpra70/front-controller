@@ -43,9 +43,9 @@ if [[ "$ARCHIVE_PATH" == *.gz ]]; then
 fi
 
 echo "Archive content preview:"
-cat "$ARCHIVE_PATH" | docker-compose exec -T mongo mongorestore "${RESTORE_ARGS[@]}" --dryRun --verbose
+cat "$ARCHIVE_PATH" | docker compose exec -T mongo mongorestore "${RESTORE_ARGS[@]}" --dryRun --verbose
 
 echo "Restoring all databases from archive..."
-cat "$ARCHIVE_PATH" | docker-compose exec -T mongo mongorestore "${RESTORE_ARGS[@]}"
+cat "$ARCHIVE_PATH" | docker compose exec -T mongo mongorestore "${RESTORE_ARGS[@]}"
 
 echo "Mongo restore completed for all databases from: $ARCHIVE_PATH"

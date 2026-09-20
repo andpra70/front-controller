@@ -22,6 +22,8 @@ Espone un punto di ingresso unico verso i servizi interni:
 - `fileserver`
 - `plotterfun-node-editor`
 - `mongo`
+- `vfs2`
+- `vfs2-example`
 
 ## Requisiti
 
@@ -249,6 +251,72 @@ MongoDB e disponibile come servizio locale nello stack Docker e salva i dati in:
 
 ```text
 ./data/mongo
+./data/minio
+./data/redis
+
+## OAuth, VFS e storage
+
+Il front-controller espone `/auth/api/`, `/auth/admin/`, `/auth/widget.js`,
+`/vfs/api/`, `/vfs/widget.js`, `/vfs/files/` e `/example/`. MongoDB conserva
+utenti e sessioni; Redis conserva cache VFS e revoche a breve durata; MinIO
+conserva gli oggetti nel bucket `public-assets`.
+
+Nel client OAuth 2.0 della Google Cloud Console devono essere registrati
+esattamente questi URI di reindirizzamento autorizzati:
+
+```text
+https://<DOMAIN>/auth/api/callback
+https://localhost/auth/api/callback
+```
+
+Il servizio seleziona automaticamente quello coerente con l'host dal quale è
+stato aperto `/example/`; host diversi non presenti nella whitelist usano il
+callback pubblico configurato da `DOMAIN`.
+
+Tutta la persistenza è raccolta sotto un'unica radice di backup:
+
+```text
+./data/mongo
+./data/minio
+./data/redis
+```
+
+Prima del primo avvio copiare i valori di `.env.example` in `.env`, configurare
+le credenziali Google OAuth e generare le chiavi JWT:
+
+```bash
+./generate-vfs-keys.sh
+docker-compose up --build
+```
+
+### Backup e restore MinIO
+
+Il backup usa l'API S3, preserva oggetti e metadata, esporta la policy anonima,
+genera un manifest e un checksum SHA-256:
+
+```bash
+./minio-backup.sh
+./minio-backup.sh nome-backup
+```
+
+Il restore senza argomento usa l'archivio più recente. La modalità predefinita
+è `merge`; `--replace` elimina anche gli oggetti estranei al backup e richiede
+conferma (`--yes` è destinato alle automazioni controllate):
+
+```bash
+./minio-restore.sh
+./minio-restore.sh export-minio/nome-backup.tar.gz
+./minio-restore.sh export-minio/nome-backup.tar.gz --replace
+```
+
+Test end-to-end non distruttivo del flusso:
+
+```bash
+./minio-smoke-test.sh
+```
+
+Per una copia filesystem dell'intera `./data`, arrestare prima MongoDB, Redis e
+MinIO. A servizi attivi usare invece `mongo-backup.sh` e `minio-backup.sh`.
 ```
 
 Credenziali di default:

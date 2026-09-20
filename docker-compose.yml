@@ -1,8 +1,5 @@
 services:
   front-controller:
-    build:
-      context: .
-      dockerfile: Dockerfile
     image: docker.io/andpra70/front-controller:latest
     container_name: front-controller
     restart: unless-stopped

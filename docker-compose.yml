@@ -77,9 +77,6 @@ services:
       - ./docker/certbot/certbot-renew.sh:/usr/local/bin/certbot-renew.sh:ro
 
   galleria:
-    build:
-      context: ../app/galleria
-      dockerfile: Dockerfile
     image: docker.io/andpra70/galleria-virtuale:latest
     container_name: galleria-virtuale
     pull_policy: always
@@ -106,9 +103,6 @@ services:
       - internal-services
 
   catalogo-opere:
-    build:
-      context: ../app/catalogo
-      dockerfile: Dockerfile
     image: docker.io/andpra70/catalogo-opere:latest
     container_name: catalogo-opere
     pull_policy: always
@@ -233,9 +227,6 @@ services:
       - internal-services
 
   example:
-    build:
-      context: ../app/example
-      dockerfile: Dockerfile
     image: docker.io/andpra70/vfs-example:latest
     container_name: vfs-example
     restart: unless-stopped
@@ -290,9 +281,6 @@ services:
       - internal-services
 
   trumpet:
-    build:
-      context: ../app/trumpet
-      dockerfile: Dockerfile
     image: docker.io/andpra70/trumpet:latest
     container_name: front-controller-trumpet
     restart: unless-stopped
@@ -308,9 +296,6 @@ services:
       - internal-services
 
   fileserver:
-    build:
-      context: ../app/fileserver
-      dockerfile: Dockerfile
     image: docker.io/andpra70/fileserver:latest
     container_name: front-controller-fileserver
     restart: unless-stopped
@@ -350,9 +335,6 @@ services:
       - internal-services
 
   oauth-server:
-    build:
-      context: ../app/oauth-server
-      dockerfile: Dockerfile
     image: docker.io/andpra70/oauth-server:latest
     container_name: oauth-server
     restart: unless-stopped

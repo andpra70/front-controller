@@ -203,8 +203,9 @@ Per tirare le immagini remote e rialzare lo stack:
 
 ## Aggiornare un singolo servizio
 
-Per aggiornare un servizio, scaricare l'immagine disponibile, eseguire la build
-quando il servizio ha un `build:` locale e ricreare soltanto quel container:
+Per aggiornare un servizio, scaricare l'immagine disponibile dal registry e
+ricreare soltanto quel container. La build locale viene usata come fallback
+solo se il pull fallisce e il contesto con il relativo `Dockerfile` esiste:
 
 ```bash
 ./update-service.sh <service-name>

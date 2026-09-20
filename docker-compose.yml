@@ -359,7 +359,7 @@ services:
       DEFAULT_CLIENT_AUTH_METHOD: none
       DEFAULT_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:?Set GOOGLE_CLIENT_SECRET in .env}
       SETUP_TOKEN: ${MINIO_ROOT_PASSWORD:?Set MINIO_ROOT_PASSWORD in .env}
-      ALLOWED_ORIGINS: https://${DOMAIN:-localhost},https://localhost
+      ALLOWED_ORIGINS: https://${DOMAIN:-localhost},https://localhost,http://localhost:5173,http://127.0.0.1:5173
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:?Set GOOGLE_CLIENT_ID in .env}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:?Set GOOGLE_CLIENT_SECRET in .env}
       GOOGLE_CALLBACK_PATH: /auth/api/callback

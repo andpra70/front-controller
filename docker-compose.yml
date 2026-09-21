@@ -85,6 +85,8 @@ services:
     build:
       context: ../app/minicms
       dockerfile: Dockerfile
+      args:
+        VITE_APP_BASE: /minicms/
     image: docker.io/andpra70/minicms:latest
     container_name: minicms
     restart: unless-stopped

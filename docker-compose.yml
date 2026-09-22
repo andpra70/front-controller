@@ -12,6 +12,8 @@ services:
         condition: service_started
       catalogo-opere:
         condition: service_started
+      desktop:
+        condition: service_started
       crawler:
         condition: service_started
       calendario:
@@ -105,6 +107,18 @@ services:
     image: docker.io/andpra70/catalogo-opere:latest
     container_name: catalogo-opere
     pull_policy: always
+    restart: unless-stopped
+    networks:
+      - internal-services
+
+  desktop:
+    build:
+      context: ../app/desktop
+      dockerfile: Dockerfile
+      args:
+        VITE_APP_BASE: /desktop/
+    image: docker.io/andpra70/desktop:latest
+    container_name: belle-desktop
     restart: unless-stopped
     networks:
       - internal-services

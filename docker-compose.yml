@@ -316,13 +316,10 @@ services:
       S3_PUBLIC_BUCKET: ${S3_PUBLIC_BUCKET:-published-assets}
       S3_ACCESS_KEY: ${MINIO_ROOT_USER:-vfsadmin}
       S3_SECRET_KEY: ${MINIO_ROOT_PASSWORD:?Set MINIO_ROOT_PASSWORD in .env}
-      JWT_ISSUER: ${JWT_ISSUER:-vfs-auth}
-      JWT_AUDIENCE: ${JWT_AUDIENCE:-vfs-clients}
+      OIDC_ISSUER: http://oauth-server:9000/oauth-server
+      OIDC_USERINFO_URL: http://oauth-server:9000/oauth-server/me
       ALLOWED_ORIGINS: https://${DOMAIN},https://localhost
-      PUBLIC_KEY_PATH: /run/secrets/public.pem
       MAX_UPLOAD_BYTES: ${MAX_UPLOAD_BYTES:-104857600}
-    volumes:
-      - ../app/fileserver/keys/public.pem:/run/secrets/public.pem:ro
     healthcheck:
       test:
         - CMD
@@ -343,11 +340,6 @@ services:
     container_name: oauth-server
     restart: unless-stopped
     user: "1000:1000"
-    depends_on:
-      mongo:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
     environment:
       PORT: 9000
       BASE_PATH: /oauth-server
@@ -371,32 +363,41 @@ services:
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:?Set GOOGLE_CLIENT_SECRET in .env}
       GOOGLE_CALLBACK_PATH: /auth/api/callback
       GOOGLE_CALLBACK_URL: https://${DOMAIN}/auth/api/callback
-      MONGO_URI: mongodb://${MONGO_ROOT_USERNAME:-root}:${MONGO_RUNTIME_PASSWORD:-rootpass}@mongo:27017/oauth2?authSource=admin
-      REDIS_URL: redis://redis:6379/0
-      VFS_GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:?Set GOOGLE_CLIENT_ID in .env}
-      VFS_GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:?Set GOOGLE_CLIENT_SECRET in .env}
-      VFS_GOOGLE_CALLBACK_URL: https://${DOMAIN}/auth/api/callback
-      VFS_GOOGLE_CALLBACK_URLS: https://${DOMAIN}/auth/api/callback,https://localhost/auth/api/callback
-      VFS_JWT_ISSUER: ${JWT_ISSUER:-vfs-auth}
-      VFS_JWT_AUDIENCE: ${JWT_AUDIENCE:-vfs-clients}
-      VFS_PRIVATE_KEY_PATH: /run/secrets/private.pem
-      ADMIN_GOOGLE_SUBS: ${ADMIN_GOOGLE_SUBS:-}
+      MAIL_ENABLED: ${MAIL_ENABLED:-true}
+      SMTP_HOST: ${SMTP_HOST:-mailpit}
+      SMTP_PORT: ${SMTP_PORT:-1025}
+      SMTP_SECURE: ${SMTP_SECURE:-false}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      MAIL_FROM: ${MAIL_FROM:-no-reply@${DOMAIN}}
+      PASSWORD_RESET_PUBLIC_URL: https://${DOMAIN}/auth/reset-password
+      PASSWORD_RESET_TOKEN_TTL_SECONDS: ${PASSWORD_RESET_TOKEN_TTL_SECONDS:-900}
+    depends_on:
+      - mailpit
     ports:
       - "9000:9000"
     volumes:
       - oauth-server-data:/app/data/oauth
-      - ../app/oauth-server/keys/private.pem:/run/secrets/private.pem:ro
     healthcheck:
       test:
         - CMD-SHELL
         - >-
-          node -e "Promise.all([fetch('http://127.0.0.1:9000/oauth-server/health'),fetch('http://127.0.0.1:9000/healthz')]).then(r=>process.exit(r.every(x=>x.ok)?0:1)).catch(()=>process.exit(1))"
+          node -e "fetch('http://127.0.0.1:9000/oauth-server/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
       interval: 10s
       timeout: 5s
       retries: 10
       start_period: 20s
     networks:
       - public-edge
+      - internal-services
+
+  mailpit:
+    image: axllent/mailpit:v1.27
+    container_name: mailpit
+    restart: unless-stopped
+    ports:
+      - "${MAILPIT_UI_PORT:-8025}:8025"
+    networks:
       - internal-services
 
   plotterfun-node-editor:

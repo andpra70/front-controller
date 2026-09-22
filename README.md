@@ -265,9 +265,10 @@ MongoDB e disponibile come servizio locale nello stack Docker e salva i dati in:
 
 ## OAuth, VFS e storage
 
-Il front-controller espone `/auth/api/`, `/auth/admin/`, `/auth/widget.js`,
+Il front-controller espone gli endpoint OIDC sotto `/auth`, il Profile Widget
+su `/auth/profile-widget.js` (`/auth/widget.js` è l'alias legacy),
 `/vfs/api/`, `/vfs/widget.js`, `/vfs/files/` e `/example/`. MongoDB conserva
-utenti e sessioni; Redis conserva cache VFS e revoche a breve durata; MinIO
+utenti e sessioni OIDC; Redis conserva la cache VFS; MinIO
 conserva gli oggetti nel bucket `public-assets`.
 
 Nel client OAuth 2.0 della Google Cloud Console devono essere registrati
@@ -290,11 +291,10 @@ Tutta la persistenza è raccolta sotto un'unica radice di backup:
 ./data/redis
 ```
 
-Prima del primo avvio copiare i valori di `.env.example` in `.env`, configurare
-le credenziali Google OAuth e generare le chiavi JWT:
+Prima del primo avvio copiare i valori di `.env.example` in `.env` e configurare
+le credenziali Google OAuth:
 
 ```bash
-./generate-vfs-keys.sh
 docker-compose up --build
 ```
 

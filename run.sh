@@ -27,7 +27,7 @@ if docker compose -p "$STACK_NAME" ps -q | grep -q .; then
     docker compose -p "$STACK_NAME" down
 fi
 
-docker compose -p "$STACK_NAME" pull certbot galleria minicms watermarks catalogo-opere crawler calendario || true
+docker compose -p "$STACK_NAME" pull certbot galleria minicms watermarks catalogo-opere calendario || true
 docker compose -p "$STACK_NAME" build --no-cache front-controller
 docker compose -p "$STACK_NAME" up -d --force-recreate
 

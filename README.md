@@ -12,7 +12,6 @@ Espone un punto di ingresso unico verso i servizi interni:
 - `minicms`
 - `watermarks`
 - `catalogo-opere`
-- `crawler`
 - `calendario`
 - `camera`
 - `gpdr`
@@ -214,7 +213,6 @@ solo se il pull fallisce e il contesto con il relativo `Dockerfile` esiste:
 Esempi:
 
 ```bash
-./update-service.sh crawler
 ./update-service.sh calendario
 ./update-service.sh mongo-express
 ./update-service.sh tuner
@@ -463,7 +461,6 @@ Il front controller pubblica questi path:
 - `/galleria/`
 - `/minicms/`
 - `/watermarks/`
-- `/crawler/`
 - `/calendario/`
 - `/camera/`
 - `/gpdr/`
@@ -476,6 +473,26 @@ Il front controller pubblica questi path:
 API `fileserver` pubblicate anche su:
 
 - `/fileserver/api/`
+
+## File pubblici temporanei
+
+La directory host `./nginx/html` e montata nel front controller in sola lettura,
+quindi i file aggiunti dopo l'avvio sono disponibili immediatamente senza
+riavviare Nginx. Per pubblicare un file, copiarlo nella sottodirectory dedicata:
+
+```bash
+mkdir -p nginx/html/public-files
+cp documento.pdf nginx/html/public-files/
+```
+
+Il file sara disponibile su:
+
+```text
+https://<DOMAIN>/public-files/documento.pdf
+```
+
+L'elenco della directory e disabilitato. Usare nomi difficili da indovinare e
+rimuovere i file appena non servono piu: chiunque conosca l'URL puo scaricarli.
 
 ## Speed test
 
@@ -505,11 +522,4 @@ Se il browser mostra errori strani dopo una modifica di configurazione:
 ```bash
 docker-compose down
 ./start.sh
-```
-
-Se `crawler` non riesce a raggiungere Internet, verificare che sia connesso anche alla rete `public-edge`:
-
-```bash
-docker-compose ps
-docker-compose exec crawler getent hosts www.pinterest.com
 ```

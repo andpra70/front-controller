@@ -14,8 +14,6 @@ services:
         condition: service_started
       desktop:
         condition: service_started
-      crawler:
-        condition: service_started
       calendario:
         condition: service_started
       camera:
@@ -55,6 +53,7 @@ services:
     volumes:
       - nginx-certs:/etc/nginx-certs:ro
       - certbot-webroot:/var/www/certbot:ro
+      - ./nginx/html:/usr/share/nginx/html:ro
 
   certbot:
     image: certbot/certbot:latest
@@ -121,20 +120,6 @@ services:
     container_name: belle-desktop
     restart: unless-stopped
     networks:
-      - internal-services
-
-  crawler:
-    image: docker.io/andpra70/crawler:latest
-    container_name: crawler
-    pull_policy: always
-    restart: unless-stopped
-    volumes:
-      - ./data:/app/data
-    dns:
-      - 1.1.1.1
-      - 8.8.8.8
-    networks:
-      - public-edge
       - internal-services
 
   mongo:

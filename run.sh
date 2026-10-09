@@ -23,13 +23,12 @@ if [[ -f .env ]]; then
     DOMAIN="${DOMAIN:-localhost}"
 fi
 
+docker compose -p "$STACK_NAME" pull
 if docker compose -p "$STACK_NAME" ps -q | grep -q .; then
     docker compose -p "$STACK_NAME" down
 fi
 
-docker compose -p "$STACK_NAME" pull certbot galleria minicms watermarks catalogo-opere calendario || true
-docker compose -p "$STACK_NAME" build --no-cache front-controller
-docker compose -p "$STACK_NAME" up -d --force-recreate
+docker compose -p "$STACK_NAME" up -d --force-recreate --pull never --remove-orphans
 
 echo "Stack started"
 echo "Front controller image: $FULL_IMAGE"

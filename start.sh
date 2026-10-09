@@ -14,12 +14,12 @@ if [[ -f .env ]]; then
     set +a
 fi
 
+docker compose pull
 if docker compose ps -q | grep -q .; then
     docker compose down
 fi
 
-docker compose build --no-cache front-controller
-docker compose up -d --force-recreate
+docker compose up -d --force-recreate --pull never --remove-orphans
 echo "Project containers started."
 echo "HTTP:        http://${DOMAIN:-localhost}"
 echo "Public URL:  https://${DOMAIN:-localhost}"

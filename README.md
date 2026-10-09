@@ -12,6 +12,7 @@ Espone un punto di ingresso unico verso i servizi interni:
 - `minicms`
 - `watermarks`
 - `catalogo-opere`
+- `desktop`
 - `calendario`
 - `camera`
 - `gpdr`
@@ -68,9 +69,9 @@ Per avviare tutto da zero:
 
 Lo script fa queste operazioni:
 
-1. ferma lo stack corrente se esiste
-2. builda senza cache il `front-controller`
-3. avvia lo stack, incluso Certbot
+1. scarica le immagini configurate dal registry
+2. ferma lo stack corrente se esiste
+3. avvia lo stack, incluso Certbot, senza build locali
 
 Endpoint locali:
 
@@ -203,8 +204,8 @@ Per tirare le immagini remote e rialzare lo stack:
 ## Aggiornare un singolo servizio
 
 Per aggiornare un servizio, scaricare l'immagine disponibile dal registry e
-ricreare soltanto quel container. La build locale viene usata come fallback
-solo se il pull fallisce e il contesto con il relativo `Dockerfile` esiste:
+ricreare soltanto quel container. Lo stack non esegue build locali: l'immagine
+del servizio deve essere gia disponibile nel registry:
 
 ```bash
 ./update-service.sh <service-name>
@@ -293,7 +294,8 @@ Prima del primo avvio copiare i valori di `.env.example` in `.env` e configurare
 le credenziali Google OAuth:
 
 ```bash
-docker-compose up --build
+docker-compose pull
+docker-compose up
 ```
 
 ### Backup e restore MinIO

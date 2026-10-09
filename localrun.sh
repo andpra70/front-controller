@@ -9,8 +9,9 @@ if [[ ! -f .env ]]; then
     echo "Missing .env file. Continuing with DOMAIN=localhost."
 fi
 
+docker compose pull
 if docker compose ps -q | grep -q .; then
     docker compose down
 fi
 
-docker compose up --build
+docker compose up --pull never

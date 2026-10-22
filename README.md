@@ -19,6 +19,7 @@ Espone un punto di ingresso unico verso i servizi interni:
 - `ginnastica`
 - `trumpet`
 - `tuner`
+- `kodak2-web`
 - `fileserver`
 - `plotterfun-node-editor`
 - `mongo`

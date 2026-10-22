@@ -26,6 +26,8 @@ services:
         condition: service_started
       tuner:
         condition: service_started
+      kodak2-web:
+        condition: service_started
       fileserver:
         condition: service_healthy
       plotterfun-node-editor:
@@ -284,6 +286,20 @@ services:
     container_name: front-controller-tuner
     pull_policy: always
     restart: unless-stopped
+    networks:
+      - internal-services
+
+  kodak2-web:
+    image: docker.io/andpra70/kodak-k-print-web:latest
+    container_name: kodak2-web
+    pull_policy: always
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--spider", "http://127.0.0.1:8080/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
     networks:
       - internal-services
 

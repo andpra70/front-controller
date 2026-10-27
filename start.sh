@@ -14,7 +14,10 @@ if [[ -f .env ]]; then
     set +a
 fi
 
-docker compose pull
+# Some pinned third-party images can become temporarily unavailable from their
+# registry. Keep updating the rest of the stack and reuse an already cached
+# image during the subsequent `--pull never` startup.
+docker compose pull --ignore-pull-failures
 if docker compose ps -q | grep -q .; then
     docker compose down
 fi
